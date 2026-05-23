@@ -47,12 +47,12 @@ export function TaskDetailModal({
 
   return (
     <div
-      className="fixed inset-0 z-50 flex items-center justify-center bg-ink-900/40 p-4 backdrop-blur-sm animate-fade-in"
+      className="fixed inset-0 z-50 flex items-end justify-center bg-ink-900/40 backdrop-blur-sm animate-fade-in sm:items-center sm:p-4"
       onClick={onClose}
     >
       <div
         onClick={(e) => e.stopPropagation()}
-        className="glass-strong shadow-deep animate-scale-in flex max-h-[85vh] w-full max-w-lg flex-col gap-5 overflow-y-auto rounded-3xl p-6"
+        className="glass-strong shadow-deep animate-scale-in flex max-h-[92dvh] w-full max-w-lg flex-col gap-5 overflow-y-auto rounded-t-3xl p-5 pb-[calc(1.25rem+env(safe-area-inset-bottom))] sm:max-h-[85vh] sm:rounded-3xl sm:p-6 sm:pb-6"
       >
         <div className="flex items-start justify-between gap-3">
           <h2 className="text-xl font-semibold tracking-tight text-ink-900">

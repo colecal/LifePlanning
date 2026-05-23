@@ -163,9 +163,17 @@ html {
 
 body {
   font-family: var(--font-geist-sans), -apple-system, BlinkMacSystemFont, "SF Pro Text", system-ui, sans-serif;
-  min-height: 100vh;
+  min-height: 100dvh;
   position: relative;
   overflow-x: hidden;
+  /* Honor iPhone notch/home-indicator safe areas */
+  padding-left: env(safe-area-inset-left);
+  padding-right: env(safe-area-inset-right);
+}
+
+/* Tap target hint for touch devices */
+@media (hover: none) {
+  button, a, select { -webkit-tap-highlight-color: rgba(244, 189, 83, 0.18); }
 }
 
 body::before {
@@ -275,6 +283,15 @@ input[type="text"], input[type="email"], input[type="password"],
 input[type="date"], input[type="datetime-local"], input[type="search"],
 textarea, select {
   color: var(--ink-700);
+  /* iOS Safari zooms inputs <16px on focus; lock to 16 on small screens */
+  font-size: 16px;
+}
+@media (min-width: 640px) {
+  input[type="text"], input[type="email"], input[type="password"],
+  input[type="date"], input[type="datetime-local"], input[type="search"],
+  textarea, select {
+    font-size: 14px;
+  }
 }
 
 input::placeholder, textarea::placeholder { color: var(--ink-300); }

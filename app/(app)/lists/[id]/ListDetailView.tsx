@@ -213,42 +213,46 @@ export function ListDetailView({
         </form>
       </div>
 
-      <form onSubmit={addItem} className="card flex flex-wrap gap-2 p-2.5">
+      <form onSubmit={addItem} className="card flex flex-col gap-2 p-2.5">
         <input
           value={newContent}
           onChange={(e) => setNewContent(e.target.value)}
           placeholder={list.kind === "grocery" ? "Add an item…" : "Add to list…"}
-          className="min-w-0 flex-1 bg-transparent px-3 py-2 text-sm text-ink-900 placeholder:text-ink-300 focus:outline-none"
+          className="w-full min-w-0 bg-transparent px-3 py-2.5 text-base text-ink-900 placeholder:text-ink-300 focus:outline-none sm:text-sm"
         />
-        {list.kind === "grocery" ? (
+        <div className="flex flex-wrap gap-2">
+          {list.kind === "grocery" ? (
+            <select
+              value={newCategory}
+              onChange={(e) => setNewCategory(e.target.value)}
+              aria-label="Category"
+              className="input-field min-w-0 flex-1 sm:w-auto sm:flex-none"
+            >
+              <option value="">Category</option>
+              {GROCERY_CATEGORIES.map((c) => (
+                <option key={c} value={c}>{c}</option>
+              ))}
+            </select>
+          ) : null}
           <select
-            value={newCategory}
-            onChange={(e) => setNewCategory(e.target.value)}
-            className="input-field w-auto text-xs"
+            value={newAssignee}
+            onChange={(e) => setNewAssignee(e.target.value)}
+            aria-label="Assignee"
+            className="input-field min-w-0 flex-1 sm:w-auto sm:flex-none"
           >
-            <option value="">Category</option>
-            {GROCERY_CATEGORIES.map((c) => (
-              <option key={c} value={c}>{c}</option>
+            <option value="">Anyone</option>
+            {members.map((m) => (
+              <option key={m.id} value={m.id}>{m.display_name}</option>
             ))}
           </select>
-        ) : null}
-        <select
-          value={newAssignee}
-          onChange={(e) => setNewAssignee(e.target.value)}
-          className="input-field w-auto text-xs"
-        >
-          <option value="">Anyone</option>
-          {members.map((m) => (
-            <option key={m.id} value={m.id}>{m.display_name}</option>
-          ))}
-        </select>
-        <button
-          type="submit"
-          disabled={pending || !newContent.trim()}
-          className="btn-primary"
-        >
-          Add
-        </button>
+          <button
+            type="submit"
+            disabled={pending || !newContent.trim()}
+            className="btn-primary flex-shrink-0"
+          >
+            Add
+          </button>
+        </div>
       </form>
 
       <section className="flex flex-col gap-4">
@@ -355,11 +359,11 @@ function ItemRow({
 }) {
   const assignee = item.assignee_id ? memberMap.get(item.assignee_id) : null;
   return (
-    <li className="group flex items-center gap-3 px-4 py-2.5 transition hover:bg-amber-50/40">
+    <li className="group flex items-start gap-3 px-3 py-2.5 transition hover:bg-amber-50/40 sm:items-center sm:px-4">
       <button
         type="button"
         onClick={onToggle}
-        className={`grid h-5 w-5 shrink-0 place-items-center rounded-md border transition ${
+        className={`mt-0.5 grid h-6 w-6 shrink-0 place-items-center rounded-md border transition sm:mt-0 sm:h-5 sm:w-5 ${
           item.checked
             ? "border-amber-500 bg-amber-gradient"
             : "border-ink-200 bg-cream-50/40 hover:border-amber-400"
@@ -379,52 +383,59 @@ function ItemRow({
           </svg>
         ) : null}
       </button>
-      <span
-        className={`flex-1 text-sm ${
-          item.checked ? "text-ink-300 line-through" : "text-ink-800"
-        }`}
-      >
-        {item.content}
-      </span>
 
-      {isGrocery && item.category ? (
-        <span className="hidden shrink-0 rounded-full bg-amber-50/80 px-2 py-0.5 text-[9px] font-medium uppercase tracking-wider text-amber-700 sm:inline-block">
-          {item.category}
-        </span>
-      ) : null}
-
-      {isGrocery ? (
-        <select
-          value={item.category ?? ""}
-          onChange={(e) => onCategory(e.target.value || null)}
-          className="hidden h-7 rounded-md border border-ink-200 bg-cream-50/60 px-1 text-xs text-ink-600 group-hover:block"
+      <div className="flex min-w-0 flex-1 flex-col gap-1 sm:flex-row sm:items-center sm:gap-3">
+        <span
+          className={`min-w-0 flex-1 text-[15px] sm:text-sm ${
+            item.checked ? "text-ink-300 line-through" : "text-ink-800"
+          }`}
         >
-          <option value="">—</option>
-          {GROCERY_CATEGORIES.map((c) => (
-            <option key={c} value={c}>{c}</option>
-          ))}
-        </select>
-      ) : null}
+          {item.content}
+        </span>
 
-      <select
-        value={item.assignee_id ?? ""}
-        onChange={(e) => onAssignee(e.target.value || null)}
-        title={assignee ? assignee.display_name : "Unassigned"}
-        className="h-7 rounded-md border border-ink-200 bg-cream-50/60 px-1.5 text-xs font-medium"
-        style={assignee ? { color: assignee.color } : { color: "var(--color-ink-400)" }}
-      >
-        <option value="">Anyone</option>
-        {members.map((m) => (
-          <option key={m.id} value={m.id} style={{ color: m.color }}>
-            {m.display_name}
-          </option>
-        ))}
-      </select>
+        <div className="flex flex-wrap items-center gap-2">
+          {isGrocery && item.category ? (
+            <span className="shrink-0 rounded-full bg-amber-50/80 px-2 py-0.5 text-[9px] font-medium uppercase tracking-wider text-amber-700">
+              {item.category}
+            </span>
+          ) : null}
+
+          {isGrocery ? (
+            <select
+              value={item.category ?? ""}
+              onChange={(e) => onCategory(e.target.value || null)}
+              aria-label="Category"
+              className="hidden h-7 rounded-md border border-ink-200 bg-cream-50/60 px-1 text-xs text-ink-600 sm:group-hover:block"
+            >
+              <option value="">—</option>
+              {GROCERY_CATEGORIES.map((c) => (
+                <option key={c} value={c}>{c}</option>
+              ))}
+            </select>
+          ) : null}
+
+          <select
+            value={item.assignee_id ?? ""}
+            onChange={(e) => onAssignee(e.target.value || null)}
+            title={assignee ? assignee.display_name : "Unassigned"}
+            aria-label="Assignee"
+            className="h-7 rounded-md border border-ink-200 bg-cream-50/60 px-1.5 text-xs font-medium"
+            style={assignee ? { color: assignee.color } : { color: "var(--color-ink-400)" }}
+          >
+            <option value="">Anyone</option>
+            {members.map((m) => (
+              <option key={m.id} value={m.id} style={{ color: m.color }}>
+                {m.display_name}
+              </option>
+            ))}
+          </select>
+        </div>
+      </div>
 
       <button
         type="button"
         onClick={onDelete}
-        className="text-base text-ink-300 opacity-0 transition group-hover:opacity-100 hover:text-red-600"
+        className="grid h-6 w-6 shrink-0 place-items-center text-base text-ink-300 transition hover:text-red-600 sm:opacity-0 sm:group-hover:opacity-100"
         aria-label="Delete"
       >
         ×

@@ -163,35 +163,45 @@ export function CalendarView({
   }
 
   return (
-    <div className="flex flex-col gap-6">
-      <header className="flex flex-wrap items-end justify-between gap-4">
-        <div>
-          <p className="text-sm font-medium uppercase tracking-[0.18em] text-amber-700">
-            Calendar
-          </p>
-          <h1 className="text-3xl font-semibold tracking-tight text-ink-900 sm:text-4xl">
-            {format(cursor, "MMMM yyyy")}
-          </h1>
+    <div className="flex flex-col gap-5">
+      <header className="flex flex-col gap-3 sm:flex-row sm:flex-wrap sm:items-end sm:justify-between sm:gap-4">
+        <div className="flex items-end justify-between gap-3">
+          <div>
+            <p className="text-xs font-medium uppercase tracking-[0.18em] text-amber-700 sm:text-sm">
+              Calendar
+            </p>
+            <h1 className="text-2xl font-semibold tracking-tight text-ink-900 sm:text-4xl">
+              {format(cursor, "MMMM yyyy")}
+            </h1>
+          </div>
+
+          <button
+            onClick={() => setModal({ mode: "create", defaultDate: new Date() })}
+            className="btn-primary sm:hidden"
+            aria-label="New event"
+          >
+            + New
+          </button>
         </div>
 
-        <div className="flex flex-wrap items-center gap-3">
+        <div className="flex items-center justify-between gap-2 sm:justify-end sm:gap-3">
           <div className="card flex items-center gap-1 p-1">
             <button
               onClick={() => setCursor(addMonths(cursor, -1))}
-              className="grid h-8 w-8 place-items-center rounded-lg text-ink-500 transition hover:bg-cream-100/70 hover:text-ink-900"
+              className="grid h-9 w-9 place-items-center rounded-lg text-lg text-ink-500 transition hover:bg-cream-100/70 hover:text-ink-900 sm:h-8 sm:w-8 sm:text-base"
               aria-label="Previous month"
             >
               ‹
             </button>
             <button
               onClick={() => setCursor(startOfMonth(new Date()))}
-              className="rounded-lg px-3 text-xs font-medium text-ink-600 transition hover:bg-cream-100/70 hover:text-ink-900"
+              className="rounded-lg px-3 py-1.5 text-xs font-medium text-ink-600 transition hover:bg-cream-100/70 hover:text-ink-900"
             >
               Today
             </button>
             <button
               onClick={() => setCursor(addMonths(cursor, 1))}
-              className="grid h-8 w-8 place-items-center rounded-lg text-ink-500 transition hover:bg-cream-100/70 hover:text-ink-900"
+              className="grid h-9 w-9 place-items-center rounded-lg text-lg text-ink-500 transition hover:bg-cream-100/70 hover:text-ink-900 sm:h-8 sm:w-8 sm:text-base"
               aria-label="Next month"
             >
               ›
@@ -201,7 +211,7 @@ export function CalendarView({
           <div className="card flex p-1 text-sm">
             <button
               onClick={() => setView("month")}
-              className={`rounded-lg px-3 py-1 transition ${
+              className={`rounded-lg px-3 py-1.5 transition sm:py-1 ${
                 view === "month"
                   ? "bg-amber-gradient text-ink-900 shadow-soft"
                   : "text-ink-500 hover:text-ink-900"
@@ -211,7 +221,7 @@ export function CalendarView({
             </button>
             <button
               onClick={() => setView("agenda")}
-              className={`rounded-lg px-3 py-1 transition ${
+              className={`rounded-lg px-3 py-1.5 transition sm:py-1 ${
                 view === "agenda"
                   ? "bg-amber-gradient text-ink-900 shadow-soft"
                   : "text-ink-500 hover:text-ink-900"
@@ -223,7 +233,7 @@ export function CalendarView({
 
           <button
             onClick={() => setModal({ mode: "create", defaultDate: new Date() })}
-            className="btn-primary"
+            className="btn-primary hidden sm:inline-flex"
           >
             + New event
           </button>
@@ -237,7 +247,7 @@ export function CalendarView({
             <button
               key={m.id}
               onClick={() => toggleOwner(m.id)}
-              className={`flex items-center gap-1.5 rounded-full border px-3 py-1 text-xs transition ${
+              className={`flex items-center gap-1.5 rounded-full border px-3 py-1.5 text-xs transition sm:py-1 ${
                 on
                   ? "border-ink-200 bg-cream-50/70 text-ink-800 backdrop-blur"
                   : "border-transparent text-ink-300 opacity-50 hover:opacity-100"
@@ -341,13 +351,13 @@ function MonthGrid({
             <div
               key={i}
               onClick={() => onDayClick(day)}
-              className={`group min-h-[6.5rem] cursor-pointer p-2 text-xs transition ${
+              className={`group min-h-[4rem] cursor-pointer p-1 text-xs transition sm:min-h-[6.5rem] sm:p-2 ${
                 isLastCol ? "" : "border-r"
               } ${isLastRow ? "" : "border-b"} border-ink-700/6 ${
                 inMonth ? "" : "bg-cream-100/30"
               } hover:bg-amber-50/40`}
             >
-              <div className="mb-1 flex items-center justify-between">
+              <div className="mb-1 flex items-center justify-center sm:justify-between">
                 <span
                   className={`inline-flex h-6 w-6 items-center justify-center rounded-full text-[12px] font-medium transition ${
                     isToday
@@ -360,7 +370,28 @@ function MonthGrid({
                   {format(day, "d")}
                 </span>
               </div>
-              <ul className="flex flex-col gap-0.5">
+
+              {/* Mobile: dots indicating events */}
+              <div className="flex flex-wrap items-center justify-center gap-0.5 sm:hidden">
+                {dayEvents.slice(0, 4).map((e, idx) => {
+                  const owner = e.owner_id ? memberMap.get(e.owner_id) : null;
+                  const color = owner?.color ?? "#9A5B0C";
+                  return (
+                    <span
+                      key={`${e.id}-${idx}`}
+                      className="inline-block h-1.5 w-1.5 rounded-full"
+                      style={{ backgroundColor: color }}
+                      title={e.title}
+                    />
+                  );
+                })}
+                {dayEvents.length > 4 ? (
+                  <span className="text-[8px] text-ink-400">+{dayEvents.length - 4}</span>
+                ) : null}
+              </div>
+
+              {/* Desktop: full event chips */}
+              <ul className="hidden flex-col gap-0.5 sm:flex">
                 {dayEvents.slice(0, 3).map((e, idx) => {
                   const owner = e.owner_id ? memberMap.get(e.owner_id) : null;
                   const color = owner?.color ?? "#9A5B0C";
@@ -557,13 +588,13 @@ function EventModal({
 
   return (
     <div
-      className="fixed inset-0 z-50 flex items-center justify-center bg-ink-900/40 p-4 backdrop-blur-sm animate-fade-in"
+      className="fixed inset-0 z-50 flex items-end justify-center bg-ink-900/40 backdrop-blur-sm animate-fade-in sm:items-center sm:p-4"
       onClick={onClose}
     >
       <form
         onSubmit={submit}
         onClick={(e) => e.stopPropagation()}
-        className="glass-strong shadow-deep animate-scale-in flex max-h-[88vh] w-full max-w-md flex-col gap-4 overflow-y-auto rounded-3xl p-6"
+        className="glass-strong shadow-deep animate-scale-in flex max-h-[92dvh] w-full max-w-md flex-col gap-4 overflow-y-auto rounded-t-3xl p-5 pb-[calc(1.25rem+env(safe-area-inset-bottom))] sm:max-h-[88vh] sm:rounded-3xl sm:p-6 sm:pb-6"
       >
         <h2 className="text-lg font-semibold text-ink-900">
           {mode === "create" ? "New event" : "Edit event"}

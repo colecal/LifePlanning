@@ -148,36 +148,40 @@ export function TasksView({
         </h1>
       </header>
 
-      <form onSubmit={addTask} className="card flex flex-wrap gap-2 p-2.5">
+      <form onSubmit={addTask} className="card flex flex-col gap-2 p-2.5">
         <input
           value={title}
           onChange={(e) => setTitle(e.target.value)}
           placeholder="New task…"
-          className="min-w-0 flex-1 bg-transparent px-3 py-2 text-sm text-ink-900 placeholder:text-ink-300 focus:outline-none"
+          className="w-full min-w-0 bg-transparent px-3 py-2.5 text-base text-ink-900 placeholder:text-ink-300 focus:outline-none sm:text-sm"
         />
-        <input
-          type="datetime-local"
-          value={due}
-          onChange={(e) => setDue(e.target.value)}
-          className="input-field w-auto text-xs"
-        />
-        <select
-          value={assignee}
-          onChange={(e) => setAssignee(e.target.value)}
-          className="input-field w-auto text-xs"
-        >
-          <option value="">Anyone</option>
-          {members.map((m) => (
-            <option key={m.id} value={m.id}>{m.display_name}</option>
-          ))}
-        </select>
-        <button
-          type="submit"
-          disabled={pending || !title.trim()}
-          className="btn-primary"
-        >
-          Add
-        </button>
+        <div className="flex gap-2">
+          <input
+            type="datetime-local"
+            value={due}
+            onChange={(e) => setDue(e.target.value)}
+            aria-label="Due date"
+            className="input-field min-w-0 flex-1"
+          />
+          <select
+            value={assignee}
+            onChange={(e) => setAssignee(e.target.value)}
+            aria-label="Assignee"
+            className="input-field w-auto flex-shrink-0"
+          >
+            <option value="">Anyone</option>
+            {members.map((m) => (
+              <option key={m.id} value={m.id}>{m.display_name}</option>
+            ))}
+          </select>
+          <button
+            type="submit"
+            disabled={pending || !title.trim()}
+            className="btn-primary flex-shrink-0"
+          >
+            Add
+          </button>
+        </div>
       </form>
 
       <section>
@@ -273,11 +277,11 @@ function TaskRow({
   const overdue = due && !isDone && isPast(due);
 
   return (
-    <li className="group flex items-center gap-3 px-4 py-2.5 transition hover:bg-amber-50/40">
+    <li className="group flex items-start gap-3 px-3 py-2.5 transition hover:bg-amber-50/40 sm:items-center sm:px-4">
       <button
         type="button"
         onClick={onToggle}
-        className={`grid h-5 w-5 shrink-0 place-items-center rounded-md border transition ${
+        className={`mt-0.5 grid h-6 w-6 shrink-0 place-items-center rounded-md border transition sm:mt-0 sm:h-5 sm:w-5 ${
           isDone
             ? "border-amber-500 bg-amber-gradient"
             : "border-ink-200 bg-cream-50/40 hover:border-amber-400"
@@ -298,49 +302,54 @@ function TaskRow({
         ) : null}
       </button>
 
-      <button
-        type="button"
-        onClick={onOpen}
-        className={`flex-1 truncate text-left text-sm ${
-          isDone ? "text-ink-300 line-through" : "font-medium text-ink-800 hover:text-amber-700"
-        }`}
-      >
-        {task.title}
-      </button>
-
-      {due ? (
-        <span
-          className={`text-xs ${
-            overdue
-              ? "font-semibold text-red-600"
-              : isDone
-                ? "text-ink-300"
-                : "text-ink-500"
+      {/* Title + meta on mobile, all one row on desktop */}
+      <div className="flex min-w-0 flex-1 flex-col gap-1 sm:flex-row sm:items-center sm:gap-3">
+        <button
+          type="button"
+          onClick={onOpen}
+          className={`min-w-0 flex-1 truncate text-left text-[15px] sm:text-sm ${
+            isDone ? "text-ink-300 line-through" : "font-medium text-ink-800 hover:text-amber-700"
           }`}
         >
-          {formatDue(due)}
-        </span>
-      ) : null}
+          {task.title}
+        </button>
 
-      <select
-        value={task.assignee_id ?? ""}
-        onChange={(e) => onAssignee(e.target.value || null)}
-        title={assignee ? assignee.display_name : "Unassigned"}
-        className="h-7 rounded-md border border-ink-200 bg-cream-50/60 px-1.5 text-xs font-medium"
-        style={assignee ? { color: assignee.color } : { color: "var(--color-ink-400)" }}
-      >
-        <option value="">Anyone</option>
-        {members.map((m) => (
-          <option key={m.id} value={m.id} style={{ color: m.color }}>
-            {m.display_name}
-          </option>
-        ))}
-      </select>
+        <div className="flex flex-wrap items-center gap-2">
+          {due ? (
+            <span
+              className={`text-xs ${
+                overdue
+                  ? "font-semibold text-red-600"
+                  : isDone
+                    ? "text-ink-300"
+                    : "text-ink-500"
+              }`}
+            >
+              {formatDue(due)}
+            </span>
+          ) : null}
+
+          <select
+            value={task.assignee_id ?? ""}
+            onChange={(e) => onAssignee(e.target.value || null)}
+            title={assignee ? assignee.display_name : "Unassigned"}
+            className="h-7 rounded-md border border-ink-200 bg-cream-50/60 px-1.5 text-xs font-medium"
+            style={assignee ? { color: assignee.color } : { color: "var(--color-ink-400)" }}
+          >
+            <option value="">Anyone</option>
+            {members.map((m) => (
+              <option key={m.id} value={m.id} style={{ color: m.color }}>
+                {m.display_name}
+              </option>
+            ))}
+          </select>
+        </div>
+      </div>
 
       <button
         type="button"
         onClick={onDelete}
-        className="text-base text-ink-300 opacity-0 transition group-hover:opacity-100 hover:text-red-600"
+        className="grid h-6 w-6 shrink-0 place-items-center text-base text-ink-300 transition hover:text-red-600 sm:opacity-0 sm:group-hover:opacity-100"
         aria-label="Delete"
       >
         ×

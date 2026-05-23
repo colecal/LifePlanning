@@ -26,6 +26,16 @@ export const metadata: Metadata = {
   description: "Cole + Kaytie's life dashboard",
 };
 
+export const viewport = {
+  width: "device-width",
+  initialScale: 1,
+  viewportFit: "cover" as const,
+  themeColor: [
+    { media: "(prefers-color-scheme: light)", color: "#FCF8EF" },
+    { media: "(prefers-color-scheme: dark)", color: "#0C0906" },
+  ],
+};
+
 async function resolveInitialTheme(): Promise<ThemePreference> {
   const c = await cookies();
   const raw = c.get(THEME_COOKIE)?.value;
