@@ -22,7 +22,7 @@ function generatePassword(length = 18): string {
 
 // One-shot user provisioning. Only runs if no profiles exist yet.
 // After both accounts are created, this endpoint becomes a 410 Gone.
-export async function POST() {
+async function runSetup() {
   const admin = createAdminClient();
 
   const { count, error: countError } = await admin
@@ -64,9 +64,6 @@ export async function POST() {
   });
 }
 
-export async function GET() {
-  return NextResponse.json(
-    { error: "Use POST to run setup." },
-    { status: 405 },
-  );
-}
+// Single-shot. Safe to call once: locks itself after the first successful run.
+export const GET = runSetup;
+export const POST = runSetup;
