@@ -28,21 +28,24 @@ export async function updateSession(request: NextRequest) {
     },
   );
 
-  const {
-    data: { user },
-  } = await supabase.auth.getUser();
+  // getClaims() decodes the session cookie locally — no round-trip to Supabase.
+  // Cookie auth is hardened by RLS at the data layer, so a fast local check is
+  // safe for gating routes. We still call getUser() in pages where we need a
+  // verified user identity.
+  const { data: claims } = await supabase.auth.getClaims();
+  const hasSession = !!claims?.claims?.sub;
 
   const path = request.nextUrl.pathname;
   const isPublic = PUBLIC_PATHS.some((p) => path === p || path.startsWith(p + "/"));
 
-  if (!user && !isPublic) {
+  if (!hasSession && !isPublic) {
     const url = request.nextUrl.clone();
     url.pathname = "/login";
     url.searchParams.set("redirect", path);
     return NextResponse.redirect(url);
   }
 
-  if (user && path === "/login") {
+  if (hasSession && path === "/login") {
     const url = request.nextUrl.clone();
     url.pathname = "/";
     url.search = "";

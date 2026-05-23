@@ -4,20 +4,20 @@ import { TasksView } from "./TasksView";
 
 export default async function TasksPage() {
   const supabase = await createClient();
-  const { householdId } = await getCurrentUserAndHousehold();
+  const { userId, householdId } = await getCurrentUserAndHousehold();
 
-  const { data: tasks } = await supabase
-    .from("tasks")
-    .select("id, title, notes, due_at, assignee_id, status, created_at")
-    .eq("household_id", householdId)
-    .order("due_at", { ascending: true, nullsFirst: false });
-
-  const members = await getHouseholdMembers();
-  const { userId } = await getCurrentUserAndHousehold();
+  const [members, tasksR] = await Promise.all([
+    getHouseholdMembers(),
+    supabase
+      .from("tasks")
+      .select("id, title, notes, due_at, assignee_id, status, created_at")
+      .eq("household_id", householdId)
+      .order("due_at", { ascending: true, nullsFirst: false }),
+  ]);
 
   return (
     <TasksView
-      initialTasks={tasks ?? []}
+      initialTasks={tasksR.data ?? []}
       members={members}
       currentUserId={userId}
     />

@@ -1,3 +1,4 @@
+import { cache } from "react";
 import { createClient } from "@/lib/supabase/server";
 
 export type Profile = {
@@ -6,29 +7,28 @@ export type Profile = {
   color: string;
 };
 
-export async function getCurrentUserAndHousehold() {
+// React.cache deduplicates within a single request — layout + page + helpers
+// can all call this and we hit Supabase once.
+export const getCurrentUserAndHousehold = cache(async () => {
   const supabase = await createClient();
-  const {
-    data: { user },
-  } = await supabase.auth.getUser();
-  if (!user) {
-    throw new Error("Not authenticated");
-  }
+  // getClaims() verifies the JWT locally against cached JWKS — same security
+  // as getUser() but no Supabase round-trip.
+  const { data } = await supabase.auth.getClaims();
+  const userId = data?.claims?.sub;
+  if (!userId) throw new Error("Not authenticated");
 
   const { data: membership, error: mErr } = await supabase
     .from("household_members")
     .select("household_id")
-    .eq("profile_id", user.id)
+    .eq("profile_id", userId)
     .limit(1)
     .single();
-  if (mErr || !membership) {
-    throw new Error("No household for user");
-  }
+  if (mErr || !membership) throw new Error("No household for user");
 
-  return { userId: user.id, householdId: membership.household_id };
-}
+  return { userId, householdId: membership.household_id };
+});
 
-export async function getHouseholdMembers(): Promise<Profile[]> {
+export const getHouseholdMembers = cache(async (): Promise<Profile[]> => {
   const supabase = await createClient();
   const { householdId } = await getCurrentUserAndHousehold();
   const { data } = await supabase
@@ -43,4 +43,16 @@ export async function getHouseholdMembers(): Promise<Profile[]> {
       return { id: p!.id, display_name: p!.display_name, color: p!.color };
     }) ?? []
   );
-}
+});
+
+// Cached profile lookup used by the app shell + anywhere else
+export const getCurrentProfile = cache(async () => {
+  const supabase = await createClient();
+  const { userId } = await getCurrentUserAndHousehold();
+  const { data } = await supabase
+    .from("profiles")
+    .select("display_name, color")
+    .eq("id", userId)
+    .single();
+  return data;
+});

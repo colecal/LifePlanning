@@ -6,37 +6,43 @@ import { getCurrentUserAndHousehold, getHouseholdMembers } from "@/lib/data";
 export default async function HomePage() {
   const supabase = await createClient();
   const { householdId } = await getCurrentUserAndHousehold();
-  const members = await getHouseholdMembers();
-  const memberMap = new Map(members.map((m) => [m.id, m]));
 
   const now = new Date();
   const endOfDay = new Date();
   endOfDay.setHours(23, 59, 59, 999);
 
-  const { data: nextEvents } = await supabase
-    .from("events")
-    .select("id, title, starts_at, ends_at, all_day, location, owner_id")
-    .eq("household_id", householdId)
-    .gte("starts_at", startOfDay(now).toISOString())
-    .order("starts_at", { ascending: true })
-    .limit(3);
+  // Fire independent queries in parallel
+  const [membersR, nextEventsR, todayTasksR, groceryListR] = await Promise.all([
+    getHouseholdMembers(),
+    supabase
+      .from("events")
+      .select("id, title, starts_at, ends_at, all_day, location, owner_id")
+      .eq("household_id", householdId)
+      .gte("starts_at", startOfDay(now).toISOString())
+      .order("starts_at", { ascending: true })
+      .limit(3),
+    supabase
+      .from("tasks")
+      .select("id, title, due_at, assignee_id, status")
+      .eq("household_id", householdId)
+      .eq("status", "open")
+      .lte("due_at", endOfDay.toISOString())
+      .order("due_at", { ascending: true }),
+    supabase
+      .from("lists")
+      .select("id, name")
+      .eq("household_id", householdId)
+      .eq("kind", "grocery")
+      .order("created_at", { ascending: false })
+      .limit(1)
+      .maybeSingle(),
+  ]);
 
-  const { data: todayTasks } = await supabase
-    .from("tasks")
-    .select("id, title, due_at, assignee_id, status")
-    .eq("household_id", householdId)
-    .eq("status", "open")
-    .lte("due_at", endOfDay.toISOString())
-    .order("due_at", { ascending: true });
-
-  const { data: groceryList } = await supabase
-    .from("lists")
-    .select("id, name")
-    .eq("household_id", householdId)
-    .eq("kind", "grocery")
-    .order("created_at", { ascending: false })
-    .limit(1)
-    .maybeSingle();
+  const members = membersR;
+  const memberMap = new Map(members.map((m) => [m.id, m]));
+  const nextEvents = nextEventsR.data;
+  const todayTasks = todayTasksR.data;
+  const groceryList = groceryListR.data;
 
   const { data: groceryItems } = groceryList
     ? await supabase

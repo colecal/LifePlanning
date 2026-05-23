@@ -1,6 +1,6 @@
 import Link from "next/link";
 import { signOutAction } from "../login/actions";
-import { createClient } from "@/lib/supabase/server";
+import { getCurrentProfile } from "@/lib/data";
 
 const NAV = [
   { href: "/", label: "Today" },
@@ -16,15 +16,7 @@ export default async function AppLayout({
 }: {
   children: React.ReactNode;
 }) {
-  const supabase = await createClient();
-  const {
-    data: { user },
-  } = await supabase.auth.getUser();
-  const { data: profile } = await supabase
-    .from("profiles")
-    .select("display_name, color")
-    .eq("id", user!.id)
-    .single();
+  const profile = await getCurrentProfile();
 
   return (
     <div className="flex min-h-screen flex-col">
