@@ -346,6 +346,7 @@ export type Database = {
           display_name: string
           email_digest_enabled: boolean
           id: string
+          theme_preference: string
         }
         Insert: {
           avatar_url?: string | null
@@ -354,6 +355,7 @@ export type Database = {
           display_name: string
           email_digest_enabled?: boolean
           id: string
+          theme_preference?: string
         }
         Update: {
           avatar_url?: string | null
@@ -362,6 +364,7 @@ export type Database = {
           display_name?: string
           email_digest_enabled?: boolean
           id?: string
+          theme_preference?: string
         }
         Relationships: []
       }

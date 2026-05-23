@@ -1,44 +1,151 @@
 @import "tailwindcss";
 
 /* ----------------------------------------------------------------------------
-   Sally & Nico palette
+   Sally & Nico palette — light mode
    Cream  — soft, warm paper (Sally's belly)
    Ink    — warm, near-black with brown undertone (Nico's nose)
-   Amber  — golden retriever fur (both pups)
+   Amber  — golden retriever fur
 ---------------------------------------------------------------------------- */
 
 @theme inline {
-  --color-cream-50:  #FCF8EF;
-  --color-cream-100: #F7F0DE;
-  --color-cream-200: #EFE5C7;
-  --color-cream-300: #E4D5A8;
-  --color-cream-400: #D6C189;
+  --color-cream-50:  var(--cream-50);
+  --color-cream-100: var(--cream-100);
+  --color-cream-200: var(--cream-200);
+  --color-cream-300: var(--cream-300);
+  --color-cream-400: var(--cream-400);
 
-  --color-amber-50:  #FEF7E6;
-  --color-amber-100: #FCEAB8;
-  --color-amber-200: #F9D788;
-  --color-amber-300: #F4BD53;
-  --color-amber-400: #EFA32E;
-  --color-amber-500: #E08A14;
-  --color-amber-600: #C2730E;
-  --color-amber-700: #9A5B0C;
-  --color-amber-800: #6F420A;
-  --color-amber-900: #4A2C08;
+  --color-amber-50:  var(--amber-50);
+  --color-amber-100: var(--amber-100);
+  --color-amber-200: var(--amber-200);
+  --color-amber-300: var(--amber-300);
+  --color-amber-400: var(--amber-400);
+  --color-amber-500: var(--amber-500);
+  --color-amber-600: var(--amber-600);
+  --color-amber-700: var(--amber-700);
+  --color-amber-800: var(--amber-800);
+  --color-amber-900: var(--amber-900);
 
-  --color-ink-50:  #F5F1E8;
-  --color-ink-100: #D9D2C2;
-  --color-ink-200: #B8AE9B;
-  --color-ink-300: #8E826B;
-  --color-ink-400: #5E5340;
-  --color-ink-500: #3E3527;
-  --color-ink-600: #2A2318;
-  --color-ink-700: #1C1610;
-  --color-ink-800: #14100A;
-  --color-ink-900: #0C0906;
-  --color-ink-950: #060403;
+  --color-ink-50:  var(--ink-50);
+  --color-ink-100: var(--ink-100);
+  --color-ink-200: var(--ink-200);
+  --color-ink-300: var(--ink-300);
+  --color-ink-400: var(--ink-400);
+  --color-ink-500: var(--ink-500);
+  --color-ink-600: var(--ink-600);
+  --color-ink-700: var(--ink-700);
+  --color-ink-800: var(--ink-800);
+  --color-ink-900: var(--ink-900);
+  --color-ink-950: var(--ink-950);
 
   --font-sans: var(--font-geist-sans);
   --font-mono: var(--font-geist-mono);
+}
+
+/* Light theme tokens */
+:root,
+:root[data-theme="light"] {
+  --cream-50:  #FCF8EF;
+  --cream-100: #F7F0DE;
+  --cream-200: #EFE5C7;
+  --cream-300: #E4D5A8;
+  --cream-400: #D6C189;
+
+  --amber-50:  #FEF7E6;
+  --amber-100: #FCEAB8;
+  --amber-200: #F9D788;
+  --amber-300: #F4BD53;
+  --amber-400: #EFA32E;
+  --amber-500: #E08A14;
+  --amber-600: #C2730E;
+  --amber-700: #9A5B0C;
+  --amber-800: #6F420A;
+  --amber-900: #4A2C08;
+
+  --ink-50:  #F5F1E8;
+  --ink-100: #D9D2C2;
+  --ink-200: #B8AE9B;
+  --ink-300: #8E826B;
+  --ink-400: #5E5340;
+  --ink-500: #3E3527;
+  --ink-600: #2A2318;
+  --ink-700: #1C1610;
+  --ink-800: #14100A;
+  --ink-900: #0C0906;
+  --ink-950: #060403;
+
+  /* Semantic surfaces */
+  --bg-base-1:        #FCF8EF;
+  --bg-base-2:        #F7F0DE;
+  --surface-glass-bg:           rgba(252, 248, 239, 0.65);
+  --surface-glass-bg-strong:    rgba(252, 248, 239, 0.85);
+  --surface-glass-bg-soft:      rgba(252, 248, 239, 0.40);
+  --surface-glass-border:       rgba(28, 22, 16, 0.08);
+  --surface-glass-border-strong:rgba(28, 22, 16, 0.10);
+
+  /* Dynamic background blobs */
+  --aurora-1: rgba(244, 189, 83, 0.45);
+  --aurora-2: rgba(224, 138, 20, 0.30);
+  --aurora-3: rgba(239, 163, 46, 0.35);
+  --aurora-4: rgba(252, 234, 184, 0.55);
+
+  --noise-opacity: 0.05;
+  --noise-blend: multiply;
+
+  color-scheme: light;
+}
+
+/* Dark theme — flip cream/ink ramps so existing classes auto-adapt;
+   amber stays vibrant for brand consistency, slightly lifted for visibility. */
+:root[data-theme="dark"] {
+  /* Cream becomes deep warm surfaces */
+  --cream-50:  #14100A;
+  --cream-100: #1C1610;
+  --cream-200: #2A2318;
+  --cream-300: #3E3527;
+  --cream-400: #5E5340;
+
+  /* Amber lifted slightly so it pops against dark */
+  --amber-50:  #2A1F0A;
+  --amber-100: #4A2C08;
+  --amber-200: #6F420A;
+  --amber-300: #9A5B0C;
+  --amber-400: #C2730E;
+  --amber-500: #EFA32E;
+  --amber-600: #F4BD53;
+  --amber-700: #F9D788;
+  --amber-800: #FCEAB8;
+  --amber-900: #FEF7E6;
+
+  /* Ink ramp inverts: 50 (was lightest) becomes darkest, 900 becomes lightest */
+  --ink-50:  #060403;
+  --ink-100: #0C0906;
+  --ink-200: #14100A;
+  --ink-300: #4E4332;
+  --ink-400: #7E7259;
+  --ink-500: #B0A488;
+  --ink-600: #D9D2C2;
+  --ink-700: #ECE5D2;
+  --ink-800: #F5F1E8;
+  --ink-900: #FCF8EF;
+  --ink-950: #FFFCF5;
+
+  --bg-base-1:        #0C0906;
+  --bg-base-2:        #060403;
+  --surface-glass-bg:           rgba(20, 16, 10, 0.55);
+  --surface-glass-bg-strong:    rgba(20, 16, 10, 0.75);
+  --surface-glass-bg-soft:      rgba(20, 16, 10, 0.30);
+  --surface-glass-border:       rgba(252, 248, 239, 0.07);
+  --surface-glass-border-strong:rgba(252, 248, 239, 0.10);
+
+  --aurora-1: rgba(244, 189, 83, 0.18);
+  --aurora-2: rgba(224, 138, 20, 0.22);
+  --aurora-3: rgba(154, 91, 12, 0.30);
+  --aurora-4: rgba(20, 16, 10, 0.40);
+
+  --noise-opacity: 0.08;
+  --noise-blend: screen;
+
+  color-scheme: dark;
 }
 
 /* ----------------------------------------------------------------------------
@@ -46,11 +153,12 @@
 ---------------------------------------------------------------------------- */
 
 html {
-  background: var(--color-cream-50);
-  color: var(--color-ink-700);
+  background: var(--bg-base-1);
+  color: var(--ink-700);
   -webkit-font-smoothing: antialiased;
   -moz-osx-font-smoothing: grayscale;
   text-rendering: optimizeLegibility;
+  transition: background-color 320ms ease;
 }
 
 body {
@@ -60,78 +168,64 @@ body {
   overflow-x: hidden;
 }
 
-/* Dynamic gradient background — three slowly drifting amber/cream blobs over a warm cream base.
-   Apple-style ambient depth without distracting motion. */
 body::before {
   content: "";
   position: fixed;
   inset: 0;
   z-index: -2;
   background:
-    radial-gradient(60vmax 60vmax at 12% 18%, rgba(244, 189, 83, 0.45), transparent 60%),
-    radial-gradient(55vmax 55vmax at 88% 12%, rgba(224, 138, 20, 0.30), transparent 60%),
-    radial-gradient(70vmax 70vmax at 75% 95%, rgba(239, 163, 46, 0.35), transparent 60%),
-    radial-gradient(65vmax 65vmax at 10% 90%, rgba(252, 234, 184, 0.55), transparent 65%),
-    linear-gradient(180deg, var(--color-cream-50) 0%, var(--color-cream-100) 100%);
+    radial-gradient(60vmax 60vmax at 12% 18%, var(--aurora-1), transparent 60%),
+    radial-gradient(55vmax 55vmax at 88% 12%, var(--aurora-2), transparent 60%),
+    radial-gradient(70vmax 70vmax at 75% 95%, var(--aurora-3), transparent 60%),
+    radial-gradient(65vmax 65vmax at 10% 90%, var(--aurora-4), transparent 65%),
+    linear-gradient(180deg, var(--bg-base-1) 0%, var(--bg-base-2) 100%);
   background-attachment: fixed;
   animation: aurora 32s ease-in-out infinite alternate;
+  transition: background 400ms ease;
 }
 
-/* Subtle grain to mimic Apple's frosted depth */
 body::after {
   content: "";
   position: fixed;
   inset: 0;
   z-index: -1;
   pointer-events: none;
-  opacity: 0.05;
+  opacity: var(--noise-opacity);
   background-image: url("data:image/svg+xml,%3Csvg viewBox='0 0 200 200' xmlns='http://www.w3.org/2000/svg'%3E%3Cfilter id='n'%3E%3CfeTurbulence type='fractalNoise' baseFrequency='0.85' numOctaves='2' stitchTiles='stitch'/%3E%3CfeColorMatrix values='0 0 0 0 0.05 0 0 0 0 0.04 0 0 0 0 0.02 0 0 0 0.9 0'/%3E%3C/filter%3E%3Crect width='100%25' height='100%25' filter='url(%23n)'/%3E%3C/svg%3E");
-  mix-blend-mode: multiply;
+  mix-blend-mode: var(--noise-blend);
 }
 
 @keyframes aurora {
   0% {
-    background-position:
-      0% 0%,
-      0% 0%,
-      0% 0%,
-      0% 0%,
-      0% 0%;
+    background-position: 0% 0%, 0% 0%, 0% 0%, 0% 0%, 0% 0%;
     filter: hue-rotate(0deg);
   }
   100% {
-    background-position:
-      8% 4%,
-      -6% 8%,
-      4% -6%,
-      -4% 6%,
-      0% 0%;
+    background-position: 8% 4%, -6% 8%, 4% -6%, -4% 6%, 0% 0%;
     filter: hue-rotate(-6deg);
   }
 }
 
 @media (prefers-reduced-motion: reduce) {
-  body::before {
-    animation: none;
-  }
+  body::before { animation: none; }
 }
 
 /* ----------------------------------------------------------------------------
-   Premium surfaces
+   Premium surfaces (theme-aware via custom properties)
 ---------------------------------------------------------------------------- */
 
 @utility glass {
-  background: rgba(252, 248, 239, 0.65);
+  background: var(--surface-glass-bg);
   backdrop-filter: saturate(180%) blur(20px);
   -webkit-backdrop-filter: saturate(180%) blur(20px);
-  border: 1px solid rgba(28, 22, 16, 0.08);
+  border: 1px solid var(--surface-glass-border);
 }
 
 @utility glass-strong {
-  background: rgba(252, 248, 239, 0.85);
+  background: var(--surface-glass-bg-strong);
   backdrop-filter: saturate(180%) blur(28px);
   -webkit-backdrop-filter: saturate(180%) blur(28px);
-  border: 1px solid rgba(28, 22, 16, 0.10);
+  border: 1px solid var(--surface-glass-border-strong);
 }
 
 @utility glass-dark {
@@ -139,10 +233,9 @@ body::after {
   backdrop-filter: saturate(180%) blur(24px);
   -webkit-backdrop-filter: saturate(180%) blur(24px);
   border: 1px solid rgba(247, 240, 222, 0.10);
-  color: var(--color-cream-50);
+  color: var(--cream-50);
 }
 
-/* Premium shadow stack (Apple's layered drop shadows) */
 @utility shadow-soft {
   box-shadow:
     0 1px 2px rgba(28, 22, 16, 0.04),
@@ -164,9 +257,8 @@ body::after {
     0 32px 64px rgba(28, 22, 16, 0.18);
 }
 
-/* Amber gradient for primary actions — golden retriever fur in light */
 @utility bg-amber-gradient {
-  background-image: linear-gradient(135deg, var(--color-amber-300) 0%, var(--color-amber-500) 50%, var(--color-amber-600) 100%);
+  background-image: linear-gradient(135deg, var(--amber-300) 0%, var(--amber-500) 50%, var(--amber-600) 100%);
 }
 
 @utility ring-amber-glow {
@@ -177,41 +269,40 @@ body::after {
    Form element resets
 ---------------------------------------------------------------------------- */
 
-input, textarea, select, button {
-  font-family: inherit;
-}
+input, textarea, select, button { font-family: inherit; }
 
 input[type="text"], input[type="email"], input[type="password"],
 input[type="date"], input[type="datetime-local"], input[type="search"],
 textarea, select {
-  color: var(--color-ink-700);
+  color: var(--ink-700);
 }
 
-input::placeholder, textarea::placeholder {
-  color: var(--color-ink-300);
-}
+input::placeholder, textarea::placeholder { color: var(--ink-300); }
 
 button:focus-visible, a:focus-visible, input:focus-visible, select:focus-visible, textarea:focus-visible {
-  outline: 2px solid var(--color-amber-400);
+  outline: 2px solid var(--amber-400);
   outline-offset: 2px;
   border-radius: 6px;
 }
 
 ::selection {
-  background: var(--color-amber-200);
-  color: var(--color-ink-900);
+  background: var(--amber-200);
+  color: var(--ink-900);
 }
 
-/* Scrollbars — minimal warm */
 ::-webkit-scrollbar { width: 10px; height: 10px; }
 ::-webkit-scrollbar-track { background: transparent; }
 ::-webkit-scrollbar-thumb {
-  background: rgba(28, 22, 16, 0.15);
+  background: var(--surface-glass-border-strong);
   border-radius: 10px;
   border: 2px solid transparent;
   background-clip: padding-box;
 }
-::-webkit-scrollbar-thumb:hover { background: rgba(28, 22, 16, 0.25); background-clip: padding-box; border: 2px solid transparent; }
+::-webkit-scrollbar-thumb:hover {
+  background: var(--ink-300);
+  background-clip: padding-box;
+  border: 2px solid transparent;
+}
 
 /* ----------------------------------------------------------------------------
    Premium element classes
@@ -226,8 +317,8 @@ button:focus-visible, a:focus-visible, input:focus-visible, select:focus-visible
   border-radius: 0.75rem;
   font-size: 0.875rem;
   font-weight: 500;
-  color: var(--color-ink-900);
-  background-image: linear-gradient(135deg, var(--color-amber-300) 0%, var(--color-amber-500) 100%);
+  color: #0C0906;
+  background-image: linear-gradient(135deg, var(--amber-300) 0%, var(--amber-500) 100%);
   box-shadow:
     inset 0 1px 0 rgba(255, 255, 255, 0.35),
     0 1px 2px rgba(28, 22, 16, 0.08),
@@ -243,15 +334,8 @@ button:focus-visible, a:focus-visible, input:focus-visible, select:focus-visible
       0 2px 4px rgba(28, 22, 16, 0.10),
       0 8px 20px rgba(224, 138, 20, 0.35);
   }
-  &:active {
-    transform: translateY(1px);
-    filter: brightness(0.98);
-  }
-  &:disabled {
-    opacity: 0.5;
-    cursor: not-allowed;
-    filter: grayscale(0.4);
-  }
+  &:active { transform: translateY(1px); filter: brightness(0.98); }
+  &:disabled { opacity: 0.5; cursor: not-allowed; filter: grayscale(0.4); }
 }
 
 @utility btn-ghost {
@@ -263,17 +347,17 @@ button:focus-visible, a:focus-visible, input:focus-visible, select:focus-visible
   border-radius: 0.625rem;
   font-size: 0.8125rem;
   font-weight: 500;
-  color: var(--color-ink-600);
-  background: rgba(252, 248, 239, 0.4);
-  border: 1px solid rgba(28, 22, 16, 0.08);
+  color: var(--ink-600);
+  background: var(--surface-glass-bg-soft);
+  border: 1px solid var(--surface-glass-border);
   transition: background 160ms ease, color 160ms ease, border-color 160ms ease;
 }
 
 @utility btn-ghost {
   &:hover {
-    background: rgba(252, 248, 239, 0.85);
-    color: var(--color-ink-900);
-    border-color: rgba(28, 22, 16, 0.14);
+    background: var(--surface-glass-bg-strong);
+    color: var(--ink-900);
+    border-color: var(--surface-glass-border-strong);
   }
 }
 
@@ -282,32 +366,39 @@ button:focus-visible, a:focus-visible, input:focus-visible, select:focus-visible
   padding: 0.625rem 0.875rem;
   border-radius: 0.625rem;
   font-size: 0.875rem;
-  color: var(--color-ink-700);
-  background: rgba(252, 248, 239, 0.7);
+  color: var(--ink-700);
+  background: var(--surface-glass-bg);
   backdrop-filter: blur(12px);
-  border: 1px solid rgba(28, 22, 16, 0.10);
+  border: 1px solid var(--surface-glass-border-strong);
   transition: border-color 160ms ease, box-shadow 160ms ease, background 160ms ease;
 }
 
 @utility input-field {
-  &:hover { background: rgba(252, 248, 239, 0.85); }
+  &:hover { background: var(--surface-glass-bg-strong); }
   &:focus {
     outline: none;
-    border-color: var(--color-amber-400);
+    border-color: var(--amber-400);
     box-shadow: 0 0 0 4px rgba(244, 189, 83, 0.18);
-    background: rgba(252, 248, 239, 0.95);
+    background: var(--surface-glass-bg-strong);
   }
 }
 
 @utility card {
-  background: rgba(252, 248, 239, 0.65);
+  background: var(--surface-glass-bg);
   backdrop-filter: saturate(180%) blur(20px);
   -webkit-backdrop-filter: saturate(180%) blur(20px);
-  border: 1px solid rgba(28, 22, 16, 0.07);
+  border: 1px solid var(--surface-glass-border);
   border-radius: 1.25rem;
   box-shadow:
     0 1px 2px rgba(28, 22, 16, 0.04),
     0 8px 24px rgba(28, 22, 16, 0.06);
+}
+
+/* Dark mode strengthens shadow contrast since cream-on-cream subtleties don't show */
+:root[data-theme="dark"] .card {
+  box-shadow:
+    0 1px 2px rgba(0, 0, 0, 0.2),
+    0 8px 24px rgba(0, 0, 0, 0.35);
 }
 
 /* ----------------------------------------------------------------------------
