@@ -47,30 +47,33 @@ export function TaskDetailModal({
 
   return (
     <div
-      className="fixed inset-0 z-50 flex items-center justify-center bg-black/40 p-4"
+      className="fixed inset-0 z-50 flex items-center justify-center bg-ink-900/40 p-4 backdrop-blur-sm animate-fade-in"
       onClick={onClose}
     >
       <div
         onClick={(e) => e.stopPropagation()}
-        className="flex max-h-[85vh] w-full max-w-lg flex-col gap-4 overflow-y-auto rounded-2xl border border-zinc-200 bg-white p-5 shadow-xl dark:border-zinc-800 dark:bg-zinc-950"
+        className="glass-strong shadow-deep animate-scale-in flex max-h-[85vh] w-full max-w-lg flex-col gap-5 overflow-y-auto rounded-3xl p-6"
       >
         <div className="flex items-start justify-between gap-3">
-          <h2 className="text-lg font-semibold">{task.title}</h2>
+          <h2 className="text-xl font-semibold tracking-tight text-ink-900">
+            {task.title}
+          </h2>
           <button
             type="button"
             onClick={onClose}
-            className="text-zinc-400 hover:text-zinc-700 dark:hover:text-zinc-200"
+            className="grid h-7 w-7 place-items-center rounded-full text-ink-400 transition hover:bg-cream-100/60 hover:text-ink-900"
+            aria-label="Close"
           >
             ×
           </button>
         </div>
 
-        <label className="flex flex-col gap-1 text-xs">
+        <label className="flex flex-col gap-1.5">
           <div className="flex items-center justify-between">
-            <span className="font-medium uppercase tracking-wide text-zinc-500">
+            <span className="text-[10px] font-semibold uppercase tracking-[0.18em] text-ink-400">
               Notes
             </span>
-            <span className="text-zinc-500">
+            <span className="text-[11px] text-ink-400">
               {status === "saving" && "Saving…"}
               {status === "saved" && "Saved"}
             </span>
@@ -80,11 +83,11 @@ export function TaskDetailModal({
             onChange={(e) => setNotes(e.target.value)}
             placeholder="Add notes…"
             rows={4}
-            className="rounded-md border border-zinc-300 bg-white p-2 text-sm dark:border-zinc-700 dark:bg-zinc-900"
+            className="input-field resize-y"
           />
         </label>
 
-        <div className="border-t border-zinc-200 pt-3 dark:border-zinc-800">
+        <div className="border-t border-ink-700/8 pt-4">
           <CommentThread
             entityType="task"
             entityId={task.id}

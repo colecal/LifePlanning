@@ -14,7 +14,7 @@ export function NewListForm() {
       <button
         type="button"
         onClick={() => setOpen(true)}
-        className="rounded-md border border-dashed border-zinc-300 px-2 py-1.5 text-xs text-zinc-500 hover:bg-zinc-100 dark:border-zinc-700 dark:hover:bg-zinc-800"
+        className="mt-1 rounded-lg border border-dashed border-ink-200 px-3 py-2 text-xs font-medium text-ink-400 transition hover:border-amber-400 hover:bg-amber-50/40 hover:text-amber-700"
       >
         + New list
       </button>
@@ -24,7 +24,7 @@ export function NewListForm() {
   return (
     <form
       action={(fd) => startTransition(() => createListAction(fd))}
-      className="flex flex-col gap-2 rounded-md border border-zinc-200 p-2 dark:border-zinc-800"
+      className="flex flex-col gap-2 rounded-xl border border-ink-700/8 bg-cream-50/60 p-2 backdrop-blur"
     >
       <input
         name="name"
@@ -32,13 +32,13 @@ export function NewListForm() {
         onChange={(e) => setName(e.target.value)}
         placeholder="List name"
         autoFocus
-        className="rounded-md border border-zinc-300 bg-white px-2 py-1.5 text-sm dark:border-zinc-700 dark:bg-zinc-900"
+        className="input-field"
       />
       <select
         name="kind"
         value={kind}
         onChange={(e) => setKind(e.target.value)}
-        className="rounded-md border border-zinc-300 bg-white px-2 py-1.5 text-sm dark:border-zinc-700 dark:bg-zinc-900"
+        className="input-field"
       >
         <option value="todo">To-do</option>
         <option value="grocery">Grocery</option>
@@ -48,14 +48,14 @@ export function NewListForm() {
         <button
           type="button"
           onClick={() => setOpen(false)}
-          className="flex-1 rounded-md border border-zinc-300 px-2 py-1 text-xs hover:bg-zinc-100 dark:border-zinc-700 dark:hover:bg-zinc-800"
+          className="btn-ghost flex-1"
         >
           Cancel
         </button>
         <button
           type="submit"
           disabled={pending || !name.trim()}
-          className="flex-1 rounded-md bg-zinc-900 px-2 py-1 text-xs text-white disabled:opacity-50 dark:bg-white dark:text-zinc-900"
+          className="btn-primary flex-1"
         >
           {pending ? "Adding…" : "Add"}
         </button>

@@ -113,7 +113,6 @@ export function ListDetailView({
     if (!newContent.trim()) return;
     const content = newContent.trim();
     setNewContent("");
-    // Optimistic insert
     const tempId = `tmp-${crypto.randomUUID()}`;
     const optimistic: Item = {
       id: tempId,
@@ -131,7 +130,6 @@ export function ListDetailView({
         category: list.kind === "grocery" ? newCategory || null : null,
         assignee_id: newAssignee || null,
       });
-      // Realtime will insert the real row; remove optimistic if real one arrives separately.
       setItems((prev) => prev.filter((p) => p.id !== tempId));
     } catch (err) {
       setItems((prev) => prev.filter((p) => p.id !== tempId));
@@ -194,8 +192,12 @@ export function ListDetailView({
     <div className="flex flex-col gap-5">
       <div className="flex items-start justify-between gap-3">
         <div>
-          <h1 className="text-2xl font-semibold tracking-tight">{list.name}</h1>
-          <p className="text-xs uppercase tracking-wide text-zinc-500">{list.kind}</p>
+          <h2 className="text-2xl font-semibold tracking-tight text-ink-900">
+            {list.name}
+          </h2>
+          <p className="text-[10px] font-semibold uppercase tracking-[0.18em] text-ink-400">
+            {list.kind}
+          </p>
         </div>
         <form action={async () => {
           if (confirm(`Delete the list "${list.name}" and all its items?`)) {
@@ -204,27 +206,27 @@ export function ListDetailView({
         }}>
           <button
             type="submit"
-            className="text-xs text-red-600 hover:underline"
+            className="text-xs font-medium text-ink-400 transition hover:text-red-600"
           >
             Delete list
           </button>
         </form>
       </div>
 
-      <form onSubmit={addItem} className="flex flex-wrap gap-2">
+      <form onSubmit={addItem} className="card flex flex-wrap gap-2 p-2.5">
         <input
           value={newContent}
           onChange={(e) => setNewContent(e.target.value)}
           placeholder={list.kind === "grocery" ? "Add an item…" : "Add to list…"}
-          className="min-w-0 flex-1 rounded-md border border-zinc-300 bg-white px-3 py-2 text-sm dark:border-zinc-700 dark:bg-zinc-900"
+          className="min-w-0 flex-1 bg-transparent px-3 py-2 text-sm text-ink-900 placeholder:text-ink-300 focus:outline-none"
         />
         {list.kind === "grocery" ? (
           <select
             value={newCategory}
             onChange={(e) => setNewCategory(e.target.value)}
-            className="rounded-md border border-zinc-300 bg-white px-2 py-2 text-sm dark:border-zinc-700 dark:bg-zinc-900"
+            className="input-field w-auto text-xs"
           >
-            <option value="">Category…</option>
+            <option value="">Category</option>
             {GROCERY_CATEGORIES.map((c) => (
               <option key={c} value={c}>{c}</option>
             ))}
@@ -233,7 +235,7 @@ export function ListDetailView({
         <select
           value={newAssignee}
           onChange={(e) => setNewAssignee(e.target.value)}
-          className="rounded-md border border-zinc-300 bg-white px-2 py-2 text-sm dark:border-zinc-700 dark:bg-zinc-900"
+          className="input-field w-auto text-xs"
         >
           <option value="">Anyone</option>
           {members.map((m) => (
@@ -243,27 +245,26 @@ export function ListDetailView({
         <button
           type="submit"
           disabled={pending || !newContent.trim()}
-          className="rounded-md bg-zinc-900 px-3 py-2 text-sm text-white disabled:opacity-50 dark:bg-white dark:text-zinc-900"
+          className="btn-primary"
         >
           Add
         </button>
       </form>
 
-      <section className="flex flex-col gap-3">
+      <section className="flex flex-col gap-4">
         {groupedActive ? (
           groupedActive.map(([cat, items]) => (
             <div key={cat}>
-              <h3 className="mb-1 text-xs font-medium uppercase tracking-wide text-zinc-500">
+              <h3 className="mb-2 px-1 text-[10px] font-semibold uppercase tracking-[0.18em] text-amber-700">
                 {cat}
               </h3>
-              <ul className="flex flex-col gap-1">
+              <ul className="card flex flex-col divide-y divide-ink-700/6 overflow-hidden">
                 {items.map((it) => (
                   <ItemRow
                     key={it.id}
                     item={it}
                     members={members}
                     memberMap={memberMap}
-                    showCategory={false}
                     onToggle={() => toggleChecked(it)}
                     onAssignee={(id) => setAssignee(it, id)}
                     onCategory={(c) => setCategory(it, c)}
@@ -275,14 +276,13 @@ export function ListDetailView({
             </div>
           ))
         ) : (
-          <ul className="flex flex-col gap-1">
+          <ul className="card flex flex-col divide-y divide-ink-700/6 overflow-hidden">
             {active.map((it) => (
               <ItemRow
                 key={it.id}
                 item={it}
                 members={members}
                 memberMap={memberMap}
-                showCategory={false}
                 onToggle={() => toggleChecked(it)}
                 onAssignee={(id) => setAssignee(it, id)}
                 onCategory={() => {}}
@@ -291,7 +291,7 @@ export function ListDetailView({
               />
             ))}
             {active.length === 0 ? (
-              <li className="rounded-md border border-dashed border-zinc-300 p-8 text-center text-sm text-zinc-500 dark:border-zinc-700">
+              <li className="p-10 text-center text-sm text-ink-300">
                 Nothing here. Add something above.
               </li>
             ) : null}
@@ -301,26 +301,25 @@ export function ListDetailView({
 
       {completed.length > 0 ? (
         <section>
-          <div className="mb-2 flex items-center justify-between">
-            <h3 className="text-xs font-medium uppercase tracking-wide text-zinc-500">
-              Completed ({completed.length})
+          <div className="mb-2 flex items-center justify-between px-1">
+            <h3 className="text-[10px] font-semibold uppercase tracking-[0.18em] text-ink-400">
+              Completed · {completed.length}
             </h3>
             <button
               type="button"
               onClick={clearCompleted}
-              className="text-xs text-zinc-500 hover:text-red-600"
+              className="text-xs font-medium text-ink-400 transition hover:text-red-600"
             >
               Clear all
             </button>
           </div>
-          <ul className="flex flex-col gap-1">
+          <ul className="card flex flex-col divide-y divide-ink-700/6 overflow-hidden opacity-70">
             {completed.map((it) => (
               <ItemRow
                 key={it.id}
                 item={it}
                 members={members}
                 memberMap={memberMap}
-                showCategory={list.kind === "grocery"}
                 onToggle={() => toggleChecked(it)}
                 onAssignee={(id) => setAssignee(it, id)}
                 onCategory={(c) => setCategory(it, c)}
@@ -339,7 +338,6 @@ function ItemRow({
   item,
   members,
   memberMap,
-  showCategory,
   onToggle,
   onAssignee,
   onCategory,
@@ -349,7 +347,6 @@ function ItemRow({
   item: Item;
   members: Profile[];
   memberMap: Map<string, Profile>;
-  showCategory: boolean;
   onToggle: () => void;
   onAssignee: (id: string | null) => void;
   onCategory: (c: string | null) => void;
@@ -358,18 +355,40 @@ function ItemRow({
 }) {
   const assignee = item.assignee_id ? memberMap.get(item.assignee_id) : null;
   return (
-    <li className="group flex items-center gap-2 rounded-md border border-zinc-200 bg-white px-3 py-2 text-sm dark:border-zinc-800 dark:bg-zinc-950">
-      <input
-        type="checkbox"
-        checked={item.checked}
-        onChange={onToggle}
-        className="h-4 w-4"
-      />
-      <span className={`flex-1 ${item.checked ? "text-zinc-400 line-through" : ""}`}>
+    <li className="group flex items-center gap-3 px-4 py-2.5 transition hover:bg-amber-50/40">
+      <button
+        type="button"
+        onClick={onToggle}
+        className={`grid h-5 w-5 shrink-0 place-items-center rounded-md border transition ${
+          item.checked
+            ? "border-amber-500 bg-amber-gradient"
+            : "border-ink-200 bg-cream-50/40 hover:border-amber-400"
+        }`}
+        aria-label={item.checked ? "Uncheck" : "Check"}
+      >
+        {item.checked ? (
+          <svg viewBox="0 0 12 12" className="h-3 w-3 text-ink-900">
+            <path
+              d="M2 6.5l2.5 2.5L10 3.5"
+              stroke="currentColor"
+              strokeWidth="2"
+              strokeLinecap="round"
+              strokeLinejoin="round"
+              fill="none"
+            />
+          </svg>
+        ) : null}
+      </button>
+      <span
+        className={`flex-1 text-sm ${
+          item.checked ? "text-ink-300 line-through" : "text-ink-800"
+        }`}
+      >
         {item.content}
       </span>
-      {showCategory ? (
-        <span className="text-[10px] uppercase tracking-wide text-zinc-500">
+
+      {isGrocery && item.category ? (
+        <span className="hidden shrink-0 rounded-full bg-amber-50/80 px-2 py-0.5 text-[9px] font-medium uppercase tracking-wider text-amber-700 sm:inline-block">
           {item.category}
         </span>
       ) : null}
@@ -378,7 +397,7 @@ function ItemRow({
         <select
           value={item.category ?? ""}
           onChange={(e) => onCategory(e.target.value || null)}
-          className="hidden rounded border border-zinc-300 bg-white px-1 py-0.5 text-xs group-hover:block dark:border-zinc-700 dark:bg-zinc-900"
+          className="hidden h-7 rounded-md border border-ink-200 bg-cream-50/60 px-1 text-xs text-ink-600 group-hover:block"
         >
           <option value="">—</option>
           {GROCERY_CATEGORIES.map((c) => (
@@ -391,8 +410,8 @@ function ItemRow({
         value={item.assignee_id ?? ""}
         onChange={(e) => onAssignee(e.target.value || null)}
         title={assignee ? assignee.display_name : "Unassigned"}
-        className="rounded border border-zinc-300 bg-white px-1 py-0.5 text-xs dark:border-zinc-700 dark:bg-zinc-900"
-        style={assignee ? { color: assignee.color } : undefined}
+        className="h-7 rounded-md border border-ink-200 bg-cream-50/60 px-1.5 text-xs font-medium"
+        style={assignee ? { color: assignee.color } : { color: "var(--color-ink-400)" }}
       >
         <option value="">Anyone</option>
         {members.map((m) => (
@@ -405,7 +424,7 @@ function ItemRow({
       <button
         type="button"
         onClick={onDelete}
-        className="text-xs text-zinc-400 opacity-0 transition group-hover:opacity-100 hover:text-red-600"
+        className="text-base text-ink-300 opacity-0 transition group-hover:opacity-100 hover:text-red-600"
         aria-label="Delete"
       >
         ×

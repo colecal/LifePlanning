@@ -138,29 +138,33 @@ export function TasksView({
   }
 
   return (
-    <div className="flex flex-col gap-5">
-      <div>
-        <h1 className="text-2xl font-semibold tracking-tight">Tasks</h1>
-        <p className="text-sm text-zinc-500">Things to handle, with due dates and owners.</p>
-      </div>
+    <div className="flex flex-col gap-6">
+      <header>
+        <p className="text-sm font-medium uppercase tracking-[0.18em] text-amber-700">
+          Tasks
+        </p>
+        <h1 className="text-3xl font-semibold tracking-tight text-ink-900 sm:text-4xl">
+          On the docket
+        </h1>
+      </header>
 
-      <form onSubmit={addTask} className="flex flex-wrap gap-2">
+      <form onSubmit={addTask} className="card flex flex-wrap gap-2 p-2.5">
         <input
           value={title}
           onChange={(e) => setTitle(e.target.value)}
           placeholder="New task…"
-          className="min-w-0 flex-1 rounded-md border border-zinc-300 bg-white px-3 py-2 text-sm dark:border-zinc-700 dark:bg-zinc-900"
+          className="min-w-0 flex-1 bg-transparent px-3 py-2 text-sm text-ink-900 placeholder:text-ink-300 focus:outline-none"
         />
         <input
           type="datetime-local"
           value={due}
           onChange={(e) => setDue(e.target.value)}
-          className="rounded-md border border-zinc-300 bg-white px-2 py-2 text-sm dark:border-zinc-700 dark:bg-zinc-900"
+          className="input-field w-auto text-xs"
         />
         <select
           value={assignee}
           onChange={(e) => setAssignee(e.target.value)}
-          className="rounded-md border border-zinc-300 bg-white px-2 py-2 text-sm dark:border-zinc-700 dark:bg-zinc-900"
+          className="input-field w-auto text-xs"
         >
           <option value="">Anyone</option>
           {members.map((m) => (
@@ -170,17 +174,17 @@ export function TasksView({
         <button
           type="submit"
           disabled={pending || !title.trim()}
-          className="rounded-md bg-zinc-900 px-3 py-2 text-sm text-white disabled:opacity-50 dark:bg-white dark:text-zinc-900"
+          className="btn-primary"
         >
           Add
         </button>
       </form>
 
       <section>
-        <h3 className="mb-2 text-xs font-medium uppercase tracking-wide text-zinc-500">
-          Open ({open.length})
+        <h3 className="mb-2 px-1 text-[10px] font-semibold uppercase tracking-[0.18em] text-amber-700">
+          Open · {open.length}
         </h3>
-        <ul className="flex flex-col gap-1">
+        <ul className="card flex flex-col divide-y divide-ink-700/6 overflow-hidden">
           {open.map((t) => (
             <TaskRow
               key={t.id}
@@ -194,8 +198,8 @@ export function TasksView({
             />
           ))}
           {open.length === 0 ? (
-            <li className="rounded-md border border-dashed border-zinc-300 p-8 text-center text-sm text-zinc-500 dark:border-zinc-700">
-              No open tasks.
+            <li className="p-12 text-center text-sm text-ink-300">
+              All clear. Nothing on the list.
             </li>
           ) : null}
         </ul>
@@ -223,10 +227,10 @@ export function TasksView({
 
       {done.length > 0 ? (
         <section>
-          <h3 className="mb-2 text-xs font-medium uppercase tracking-wide text-zinc-500">
-            Done ({done.length})
+          <h3 className="mb-2 px-1 text-[10px] font-semibold uppercase tracking-[0.18em] text-ink-400">
+            Done · {done.length}
           </h3>
-          <ul className="flex flex-col gap-1">
+          <ul className="card flex flex-col divide-y divide-ink-700/6 overflow-hidden opacity-70">
             {done.map((t) => (
               <TaskRow
                 key={t.id}
@@ -269,41 +273,61 @@ function TaskRow({
   const overdue = due && !isDone && isPast(due);
 
   return (
-    <li className="group flex items-center gap-2 rounded-md border border-zinc-200 bg-white px-3 py-2 text-sm dark:border-zinc-800 dark:bg-zinc-950">
-      <input
-        type="checkbox"
-        checked={isDone}
-        onChange={onToggle}
-        className="h-4 w-4"
-      />
+    <li className="group flex items-center gap-3 px-4 py-2.5 transition hover:bg-amber-50/40">
+      <button
+        type="button"
+        onClick={onToggle}
+        className={`grid h-5 w-5 shrink-0 place-items-center rounded-md border transition ${
+          isDone
+            ? "border-amber-500 bg-amber-gradient"
+            : "border-ink-200 bg-cream-50/40 hover:border-amber-400"
+        }`}
+        aria-label={isDone ? "Mark open" : "Mark done"}
+      >
+        {isDone ? (
+          <svg viewBox="0 0 12 12" className="h-3 w-3 text-ink-900">
+            <path
+              d="M2 6.5l2.5 2.5L10 3.5"
+              stroke="currentColor"
+              strokeWidth="2"
+              strokeLinecap="round"
+              strokeLinejoin="round"
+              fill="none"
+            />
+          </svg>
+        ) : null}
+      </button>
+
       <button
         type="button"
         onClick={onOpen}
-        className={`flex-1 truncate text-left hover:underline ${
-          isDone ? "text-zinc-400 line-through" : ""
+        className={`flex-1 truncate text-left text-sm ${
+          isDone ? "text-ink-300 line-through" : "font-medium text-ink-800 hover:text-amber-700"
         }`}
       >
         {task.title}
       </button>
+
       {due ? (
         <span
           className={`text-xs ${
             overdue
-              ? "font-medium text-red-600"
+              ? "font-semibold text-red-600"
               : isDone
-                ? "text-zinc-400"
-                : "text-zinc-500"
+                ? "text-ink-300"
+                : "text-ink-500"
           }`}
         >
           {formatDue(due)}
         </span>
       ) : null}
+
       <select
         value={task.assignee_id ?? ""}
         onChange={(e) => onAssignee(e.target.value || null)}
         title={assignee ? assignee.display_name : "Unassigned"}
-        className="rounded border border-zinc-300 bg-white px-1 py-0.5 text-xs dark:border-zinc-700 dark:bg-zinc-900"
-        style={assignee ? { color: assignee.color } : undefined}
+        className="h-7 rounded-md border border-ink-200 bg-cream-50/60 px-1.5 text-xs font-medium"
+        style={assignee ? { color: assignee.color } : { color: "var(--color-ink-400)" }}
       >
         <option value="">Anyone</option>
         {members.map((m) => (
@@ -312,10 +336,11 @@ function TaskRow({
           </option>
         ))}
       </select>
+
       <button
         type="button"
         onClick={onDelete}
-        className="text-xs text-zinc-400 opacity-0 transition group-hover:opacity-100 hover:text-red-600"
+        className="text-base text-ink-300 opacity-0 transition group-hover:opacity-100 hover:text-red-600"
         aria-label="Delete"
       >
         ×
@@ -327,5 +352,5 @@ function TaskRow({
 function formatDue(d: Date): string {
   if (isToday(d)) return `Today ${format(d, "h:mma").toLowerCase()}`;
   if (isTomorrow(d)) return `Tmrw ${format(d, "h:mma").toLowerCase()}`;
-  return format(d, "MMM d, h:mma").toLowerCase();
+  return format(d, "MMM d · h:mma").toLowerCase();
 }

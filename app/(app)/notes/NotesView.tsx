@@ -85,68 +85,81 @@ export function NotesView({
   }
 
   return (
-    <div className="grid grid-cols-1 gap-6 md:grid-cols-[16rem_1fr]">
-      <aside className="flex flex-col gap-3">
-        <div className="flex items-center justify-between">
-          <h2 className="text-sm font-medium uppercase tracking-wide text-zinc-500">
-            Notes
-          </h2>
-          <button
-            type="button"
-            onClick={newNote}
-            disabled={pending}
-            className="rounded-md border border-zinc-300 px-2 py-1 text-xs hover:bg-zinc-100 dark:border-zinc-700 dark:hover:bg-zinc-800"
-          >
-            + New
-          </button>
-        </div>
-        <ul className="flex flex-col gap-0.5">
-          {notes.map((n) => (
-            <li key={n.id}>
-              <button
-                type="button"
-                onClick={() => setSelectedId(n.id)}
-                className={`flex w-full flex-col items-start rounded-md px-2 py-1.5 text-left text-sm hover:bg-zinc-100 dark:hover:bg-zinc-800 ${
-                  selectedId === n.id ? "bg-zinc-100 dark:bg-zinc-800" : ""
-                }`}
-              >
-                <span className="truncate font-medium">
-                  {n.title?.trim() || "Untitled"}
-                </span>
-                <span className="text-[10px] text-zinc-500">
-                  {formatDistanceToNow(new Date(n.updated_at), { addSuffix: true })}
-                </span>
-              </button>
-            </li>
-          ))}
-          {notes.length === 0 ? (
-            <li className="px-2 py-1.5 text-sm text-zinc-500">No notes yet.</li>
-          ) : null}
-        </ul>
-      </aside>
+    <div className="flex flex-col gap-6">
+      <header>
+        <p className="text-sm font-medium uppercase tracking-[0.18em] text-amber-700">
+          Notes
+        </p>
+        <h1 className="text-3xl font-semibold tracking-tight text-ink-900 sm:text-4xl">
+          Thoughts on paper
+        </h1>
+      </header>
 
-      <section>
-        {selected ? (
-          <NoteEditor
-            key={selected.id}
-            note={selected}
-            members={members}
-            memberMap={memberMap}
-            onDelete={() => removeNote(selected.id)}
-            onLocalChange={(patch) =>
-              setNotes((prev) =>
-                prev.map((p) =>
-                  p.id === selected.id ? { ...p, ...patch } : p,
-                ),
-              )
-            }
-          />
-        ) : (
-          <div className="flex h-full min-h-[20rem] items-center justify-center rounded-xl border border-dashed border-zinc-300 p-12 text-center text-sm text-zinc-500 dark:border-zinc-700">
-            <p>Select or create a note.</p>
+      <div className="grid grid-cols-1 gap-6 md:grid-cols-[18rem_1fr]">
+        <aside className="card flex flex-col gap-3 p-4">
+          <div className="flex items-center justify-between px-2">
+            <h2 className="text-[10px] font-semibold uppercase tracking-[0.18em] text-ink-400">
+              All notes
+            </h2>
+            <button
+              type="button"
+              onClick={newNote}
+              disabled={pending}
+              className="rounded-full bg-amber-50/80 px-2.5 py-0.5 text-xs font-medium text-amber-700 transition hover:bg-amber-100"
+            >
+              + New
+            </button>
           </div>
-        )}
-      </section>
+          <ul className="flex flex-col gap-0.5">
+            {notes.map((n) => (
+              <li key={n.id}>
+                <button
+                  type="button"
+                  onClick={() => setSelectedId(n.id)}
+                  className={`flex w-full flex-col items-start gap-0.5 rounded-lg px-2.5 py-2 text-left transition ${
+                    selectedId === n.id
+                      ? "bg-amber-50/70 text-ink-900"
+                      : "text-ink-700 hover:bg-cream-100/60"
+                  }`}
+                >
+                  <span className="line-clamp-1 text-sm font-medium">
+                    {n.title?.trim() || "Untitled"}
+                  </span>
+                  <span className="text-[10px] text-ink-400">
+                    {formatDistanceToNow(new Date(n.updated_at), { addSuffix: true })}
+                  </span>
+                </button>
+              </li>
+            ))}
+            {notes.length === 0 ? (
+              <li className="px-2.5 py-2 text-sm text-ink-300">No notes yet.</li>
+            ) : null}
+          </ul>
+        </aside>
+
+        <section>
+          {selected ? (
+            <NoteEditor
+              key={selected.id}
+              note={selected}
+              members={members}
+              memberMap={memberMap}
+              onDelete={() => removeNote(selected.id)}
+              onLocalChange={(patch) =>
+                setNotes((prev) =>
+                  prev.map((p) =>
+                    p.id === selected.id ? { ...p, ...patch } : p,
+                  ),
+                )
+              }
+            />
+          ) : (
+            <div className="card grid min-h-[24rem] place-items-center p-12 text-center">
+              <p className="text-sm text-ink-400">Select or create a note.</p>
+            </div>
+          )}
+        </section>
+      </div>
     </div>
   );
 }
@@ -168,7 +181,6 @@ function NoteEditor({
   const [status, setStatus] = useState<"idle" | "saving" | "saved">("idle");
   const lastSavedRef = useRef({ title: note.title ?? "", body: note.body ?? "" });
 
-  // Debounced autosave
   useEffect(() => {
     if (title === lastSavedRef.current.title && body === lastSavedRef.current.body) {
       return;
@@ -191,29 +203,29 @@ function NoteEditor({
   const updatedBy = note.updated_by ? memberMap.get(note.updated_by) : null;
 
   return (
-    <div className="flex flex-col gap-3">
+    <div className="card flex flex-col gap-3 p-6">
       <div className="flex items-center justify-between gap-2">
         <input
           value={title}
           onChange={(e) => setTitle(e.target.value)}
           placeholder="Untitled"
-          className="min-w-0 flex-1 bg-transparent text-2xl font-semibold tracking-tight outline-none"
+          className="min-w-0 flex-1 bg-transparent text-2xl font-semibold tracking-tight text-ink-900 outline-none placeholder:text-ink-300"
         />
-        <div className="flex shrink-0 items-center gap-3 text-xs text-zinc-500">
-          <span>
+        <div className="flex shrink-0 items-center gap-3 text-xs">
+          <span className="text-ink-400">
             {status === "saving" && "Saving…"}
             {status === "saved" && "Saved"}
           </span>
           <button
             type="button"
             onClick={onDelete}
-            className="text-red-600 hover:underline"
+            className="font-medium text-ink-400 transition hover:text-red-600"
           >
             Delete
           </button>
         </div>
       </div>
-      <p className="text-xs text-zinc-500">
+      <p className="text-xs text-ink-400">
         Last edited{" "}
         {formatDistanceToNow(new Date(note.updated_at), { addSuffix: true })}
         {updatedBy ? (
@@ -230,7 +242,7 @@ function NoteEditor({
         onChange={(e) => setBody(e.target.value)}
         placeholder="Write…"
         rows={20}
-        className="min-h-[24rem] resize-y rounded-md border border-zinc-200 bg-white p-3 font-mono text-sm leading-relaxed outline-none focus:border-zinc-400 dark:border-zinc-800 dark:bg-zinc-950 dark:focus:border-zinc-600"
+        className="min-h-[26rem] resize-y rounded-xl border border-ink-700/8 bg-cream-50/40 p-4 font-mono text-sm leading-relaxed text-ink-800 outline-none transition placeholder:text-ink-300 focus:border-amber-400 focus:bg-cream-50/70"
       />
     </div>
   );

@@ -14,7 +14,7 @@ import {
   startOfMonth,
   startOfWeek,
 } from "date-fns";
-import { RRule, rrulestr } from "rrule";
+import { rrulestr } from "rrule";
 import { createClient } from "@/lib/supabase/client";
 import type { Profile } from "@/lib/data";
 import { CommentThread } from "@/app/components/CommentThread";
@@ -97,7 +97,6 @@ export function CalendarView({
     | null
   >(null);
 
-  // Realtime: subscribe to event changes for the current household
   useEffect(() => {
     const supabase = createClient();
     const channel = supabase
@@ -142,7 +141,6 @@ export function CalendarView({
     [events, activeOwners],
   );
 
-  // Visible window expansion
   const rangeStart = view === "month" ? startOfWeek(startOfMonth(cursor)) : startOfDay(cursor);
   const rangeEnd = view === "month" ? endOfWeek(endOfMonth(cursor)) : addDays(rangeStart, 30);
 
@@ -165,66 +163,59 @@ export function CalendarView({
   }
 
   return (
-    <div className="flex flex-col gap-4">
-      <div className="flex flex-wrap items-center justify-between gap-3">
-        <div className="flex items-center gap-2">
-          <button
-            onClick={() => setCursor(addMonths(cursor, -1))}
-            className="rounded-md border border-zinc-300 px-2.5 py-1.5 text-sm hover:bg-zinc-100 dark:border-zinc-700 dark:hover:bg-zinc-800"
-          >
-            ←
-          </button>
-          <h1 className="min-w-[12ch] text-center text-xl font-semibold">
+    <div className="flex flex-col gap-6">
+      <header className="flex flex-wrap items-end justify-between gap-4">
+        <div>
+          <p className="text-sm font-medium uppercase tracking-[0.18em] text-amber-700">
+            Calendar
+          </p>
+          <h1 className="text-3xl font-semibold tracking-tight text-ink-900 sm:text-4xl">
             {format(cursor, "MMMM yyyy")}
           </h1>
-          <button
-            onClick={() => setCursor(addMonths(cursor, 1))}
-            className="rounded-md border border-zinc-300 px-2.5 py-1.5 text-sm hover:bg-zinc-100 dark:border-zinc-700 dark:hover:bg-zinc-800"
-          >
-            →
-          </button>
-          <button
-            onClick={() => setCursor(startOfMonth(new Date()))}
-            className="ml-2 rounded-md border border-zinc-300 px-2.5 py-1.5 text-xs hover:bg-zinc-100 dark:border-zinc-700 dark:hover:bg-zinc-800"
-          >
-            Today
-          </button>
         </div>
 
-        <div className="flex items-center gap-3">
-          <div className="flex items-center gap-2 text-sm">
-            {members.map((m) => {
-              const on = activeOwners.has(m.id);
-              return (
-                <button
-                  key={m.id}
-                  onClick={() => toggleOwner(m.id)}
-                  className={`flex items-center gap-1.5 rounded-full border px-2.5 py-1 text-xs transition ${
-                    on
-                      ? "border-zinc-300 dark:border-zinc-700"
-                      : "border-transparent opacity-40"
-                  }`}
-                >
-                  <span
-                    className="inline-block h-2 w-2 rounded-full"
-                    style={{ backgroundColor: m.color }}
-                  />
-                  {m.display_name}
-                </button>
-              );
-            })}
+        <div className="flex flex-wrap items-center gap-3">
+          <div className="card flex items-center gap-1 p-1">
+            <button
+              onClick={() => setCursor(addMonths(cursor, -1))}
+              className="grid h-8 w-8 place-items-center rounded-lg text-ink-500 transition hover:bg-cream-100/70 hover:text-ink-900"
+              aria-label="Previous month"
+            >
+              ‹
+            </button>
+            <button
+              onClick={() => setCursor(startOfMonth(new Date()))}
+              className="rounded-lg px-3 text-xs font-medium text-ink-600 transition hover:bg-cream-100/70 hover:text-ink-900"
+            >
+              Today
+            </button>
+            <button
+              onClick={() => setCursor(addMonths(cursor, 1))}
+              className="grid h-8 w-8 place-items-center rounded-lg text-ink-500 transition hover:bg-cream-100/70 hover:text-ink-900"
+              aria-label="Next month"
+            >
+              ›
+            </button>
           </div>
 
-          <div className="flex overflow-hidden rounded-md border border-zinc-300 text-sm dark:border-zinc-700">
+          <div className="card flex p-1 text-sm">
             <button
               onClick={() => setView("month")}
-              className={`px-3 py-1 ${view === "month" ? "bg-zinc-900 text-white dark:bg-white dark:text-zinc-900" : ""}`}
+              className={`rounded-lg px-3 py-1 transition ${
+                view === "month"
+                  ? "bg-amber-gradient text-ink-900 shadow-soft"
+                  : "text-ink-500 hover:text-ink-900"
+              }`}
             >
               Month
             </button>
             <button
               onClick={() => setView("agenda")}
-              className={`px-3 py-1 ${view === "agenda" ? "bg-zinc-900 text-white dark:bg-white dark:text-zinc-900" : ""}`}
+              className={`rounded-lg px-3 py-1 transition ${
+                view === "agenda"
+                  ? "bg-amber-gradient text-ink-900 shadow-soft"
+                  : "text-ink-500 hover:text-ink-900"
+              }`}
             >
               Agenda
             </button>
@@ -232,11 +223,37 @@ export function CalendarView({
 
           <button
             onClick={() => setModal({ mode: "create", defaultDate: new Date() })}
-            className="rounded-md bg-zinc-900 px-3 py-1.5 text-sm text-white hover:bg-zinc-800 dark:bg-white dark:text-zinc-900 dark:hover:bg-zinc-200"
+            className="btn-primary"
           >
             + New event
           </button>
         </div>
+      </header>
+
+      <div className="flex flex-wrap items-center gap-2">
+        {members.map((m) => {
+          const on = activeOwners.has(m.id);
+          return (
+            <button
+              key={m.id}
+              onClick={() => toggleOwner(m.id)}
+              className={`flex items-center gap-1.5 rounded-full border px-3 py-1 text-xs transition ${
+                on
+                  ? "border-ink-200 bg-cream-50/70 text-ink-800 backdrop-blur"
+                  : "border-transparent text-ink-300 opacity-50 hover:opacity-100"
+              }`}
+            >
+              <span
+                className="inline-block h-2 w-2 rounded-full"
+                style={{
+                  backgroundColor: m.color,
+                  boxShadow: on ? `0 0 0 2px ${m.color}33` : "none",
+                }}
+              />
+              {m.display_name}
+            </button>
+          );
+        })}
       </div>
 
       {view === "month" ? (
@@ -298,41 +315,46 @@ function MonthGrid({
   const today = startOfDay(new Date());
 
   return (
-    <div>
-      <div className="grid grid-cols-7 border-b border-zinc-200 text-center text-xs font-medium uppercase tracking-wide text-zinc-500 dark:border-zinc-800">
+    <div className="card overflow-hidden">
+      <div className="grid grid-cols-7 border-b border-ink-700/8 text-center text-[10px] font-semibold uppercase tracking-[0.16em] text-ink-400">
         {["Sun", "Mon", "Tue", "Wed", "Thu", "Fri", "Sat"].map((d) => (
-          <div key={d} className="py-2">
+          <div key={d} className="py-3">
             {d}
           </div>
         ))}
       </div>
-      <div className="grid grid-cols-7 overflow-hidden rounded-b-md border-l border-r border-b border-zinc-200 dark:border-zinc-800">
+      <div className="grid grid-cols-7">
         {days.map((day, i) => {
           const inMonth = isSameMonth(day, cursor);
           const isToday = isSameDay(day, today);
-          const dayEvents = occurrences.filter((o) =>
-            isWithinInterval(day, {
-              start: startOfDay(o.occurrence_start),
-              end: o.occurrence_end,
-            }) || isSameDay(day, o.occurrence_start),
+          const dayEvents = occurrences.filter(
+            (o) =>
+              isWithinInterval(day, {
+                start: startOfDay(o.occurrence_start),
+                end: o.occurrence_end,
+              }) || isSameDay(day, o.occurrence_start),
           );
+          const isLastCol = (i + 1) % 7 === 0;
+          const isLastRow = i >= days.length - 7;
 
           return (
             <div
               key={i}
               onClick={() => onDayClick(day)}
-              className={`group min-h-[6rem] cursor-pointer border-b border-r border-zinc-200 p-1.5 text-xs last:border-r-0 dark:border-zinc-800 ${
-                inMonth ? "bg-white dark:bg-zinc-950" : "bg-zinc-50 dark:bg-zinc-900"
-              }`}
+              className={`group min-h-[6.5rem] cursor-pointer p-2 text-xs transition ${
+                isLastCol ? "" : "border-r"
+              } ${isLastRow ? "" : "border-b"} border-ink-700/6 ${
+                inMonth ? "" : "bg-cream-100/30"
+              } hover:bg-amber-50/40`}
             >
               <div className="mb-1 flex items-center justify-between">
                 <span
-                  className={`inline-flex h-5 w-5 items-center justify-center rounded-full text-[11px] ${
+                  className={`inline-flex h-6 w-6 items-center justify-center rounded-full text-[12px] font-medium transition ${
                     isToday
-                      ? "bg-zinc-900 font-medium text-white dark:bg-white dark:text-zinc-900"
+                      ? "bg-amber-gradient text-ink-900 shadow-soft"
                       : inMonth
-                        ? "text-zinc-700 dark:text-zinc-300"
-                        : "text-zinc-400"
+                        ? "text-ink-700"
+                        : "text-ink-300"
                   }`}
                 >
                   {format(day, "d")}
@@ -341,6 +363,7 @@ function MonthGrid({
               <ul className="flex flex-col gap-0.5">
                 {dayEvents.slice(0, 3).map((e, idx) => {
                   const owner = e.owner_id ? memberMap.get(e.owner_id) : null;
+                  const color = owner?.color ?? "#9A5B0C";
                   return (
                     <li
                       key={`${e.id}-${idx}`}
@@ -348,17 +371,20 @@ function MonthGrid({
                         ev.stopPropagation();
                         onEventClick(e);
                       }}
-                      className="truncate rounded px-1 py-0.5 text-white"
-                      style={{ backgroundColor: owner?.color ?? "#6b7280" }}
+                      className="truncate rounded-md px-1.5 py-0.5 text-[11px] font-medium text-ink-900 backdrop-blur transition hover:brightness-95"
+                      style={{
+                        background: `linear-gradient(135deg, ${color}33, ${color}55)`,
+                        borderLeft: `2px solid ${color}`,
+                      }}
                       title={e.title}
                     >
-                      {!e.all_day ? format(e.occurrence_start, "h:mm a ") : ""}
+                      {!e.all_day ? format(e.occurrence_start, "h:mma ").toLowerCase() : ""}
                       {e.title}
                     </li>
                   );
                 })}
                 {dayEvents.length > 3 ? (
-                  <li className="text-[10px] text-zinc-500">
+                  <li className="text-[10px] text-ink-400">
                     +{dayEvents.length - 3} more
                   </li>
                 ) : null}
@@ -392,40 +418,48 @@ function AgendaList({
 
   if (groups.length === 0) {
     return (
-      <p className="rounded-md border border-dashed border-zinc-300 p-8 text-center text-sm text-zinc-500 dark:border-zinc-700">
-        Nothing on the calendar in this range.
-      </p>
+      <div className="card grid place-items-center p-16 text-center">
+        <p className="text-sm text-ink-400">Nothing on the calendar in this range.</p>
+      </div>
     );
   }
 
   return (
-    <div className="flex flex-col gap-4">
+    <div className="flex flex-col gap-6">
       {groups.map(([date, items]) => (
         <div key={date}>
-          <div className="mb-2 text-sm font-medium text-zinc-700 dark:text-zinc-300">
-            {format(new Date(date), "EEEE, MMM d")}
+          <div className="mb-2 flex items-baseline gap-3 px-1">
+            <span className="text-2xl font-semibold text-ink-900">
+              {format(new Date(date), "d")}
+            </span>
+            <span className="text-sm font-medium text-ink-400">
+              {format(new Date(date), "EEEE, MMM yyyy")}
+            </span>
           </div>
-          <ul className="flex flex-col gap-1.5">
+          <ul className="card flex flex-col divide-y divide-ink-700/8 overflow-hidden">
             {items.map((e, idx) => {
               const owner = e.owner_id ? memberMap.get(e.owner_id) : null;
               return (
                 <li
                   key={`${e.id}-${idx}`}
                   onClick={() => onEventClick(e)}
-                  className="flex cursor-pointer items-center gap-3 rounded-md border border-zinc-200 bg-white p-3 text-sm hover:bg-zinc-50 dark:border-zinc-800 dark:bg-zinc-950 dark:hover:bg-zinc-900"
+                  className="flex cursor-pointer items-center gap-4 px-5 py-3 transition hover:bg-amber-50/40"
                 >
                   <span
                     className="inline-block h-2.5 w-2.5 shrink-0 rounded-full"
-                    style={{ backgroundColor: owner?.color ?? "#6b7280" }}
+                    style={{
+                      backgroundColor: owner?.color ?? "var(--color-amber-500)",
+                      boxShadow: `0 0 0 3px ${(owner?.color ?? "#E08A14")}22`,
+                    }}
                   />
-                  <span className="w-24 shrink-0 text-zinc-500">
-                    {e.all_day
-                      ? "All day"
-                      : format(e.occurrence_start, "h:mm a")}
+                  <span className="w-24 shrink-0 text-sm text-ink-400">
+                    {e.all_day ? "All day" : format(e.occurrence_start, "h:mm a").toLowerCase()}
                   </span>
-                  <span className="flex-1 truncate font-medium">{e.title}</span>
+                  <span className="flex-1 truncate text-[15px] font-medium text-ink-900">
+                    {e.title}
+                  </span>
                   {e.location ? (
-                    <span className="hidden truncate text-xs text-zinc-500 sm:block">
+                    <span className="hidden truncate text-xs text-ink-400 sm:block">
                       {e.location}
                     </span>
                   ) : null}
@@ -523,155 +557,161 @@ function EventModal({
 
   return (
     <div
-      className="fixed inset-0 z-50 flex items-center justify-center bg-black/40 p-4"
+      className="fixed inset-0 z-50 flex items-center justify-center bg-ink-900/40 p-4 backdrop-blur-sm animate-fade-in"
       onClick={onClose}
     >
       <form
         onSubmit={submit}
         onClick={(e) => e.stopPropagation()}
-        className="w-full max-w-md rounded-2xl border border-zinc-200 bg-white p-5 shadow-xl dark:border-zinc-800 dark:bg-zinc-950"
+        className="glass-strong shadow-deep animate-scale-in flex max-h-[88vh] w-full max-w-md flex-col gap-4 overflow-y-auto rounded-3xl p-6"
       >
-        <h2 className="mb-4 text-lg font-semibold">
+        <h2 className="text-lg font-semibold text-ink-900">
           {mode === "create" ? "New event" : "Edit event"}
         </h2>
 
-        <div className="flex flex-col gap-3 text-sm">
-          <input
-            value={title}
-            onChange={(e) => setTitle(e.target.value)}
-            placeholder="Title"
-            required
-            autoFocus
-            className="rounded-md border border-zinc-300 bg-white px-3 py-2 dark:border-zinc-700 dark:bg-zinc-900"
-          />
+        <input
+          value={title}
+          onChange={(e) => setTitle(e.target.value)}
+          placeholder="Title"
+          required
+          autoFocus
+          className="input-field text-base font-medium"
+        />
 
-          <label className="flex items-center gap-2 text-xs text-zinc-600 dark:text-zinc-300">
+        <label className="flex items-center gap-2 text-sm text-ink-600">
+          <input
+            type="checkbox"
+            checked={allDay}
+            onChange={(e) => {
+              const next = e.target.checked;
+              setAllDay(next);
+              setStartsAt(toLocalInput(fromLocalInput(startsAt, allDay), next));
+              setEndsAt(toLocalInput(fromLocalInput(endsAt, allDay), next));
+            }}
+            className="h-4 w-4 accent-amber-500"
+          />
+          All day
+        </label>
+
+        <div className="grid grid-cols-2 gap-2">
+          <Field label="Start">
             <input
-              type="checkbox"
-              checked={allDay}
-              onChange={(e) => {
-                const next = e.target.checked;
-                setAllDay(next);
-                setStartsAt(toLocalInput(fromLocalInput(startsAt, allDay), next));
-                setEndsAt(toLocalInput(fromLocalInput(endsAt, allDay), next));
-              }}
+              type={allDay ? "date" : "datetime-local"}
+              value={startsAt}
+              onChange={(e) => setStartsAt(e.target.value)}
+              className="input-field"
             />
-            All day
-          </label>
+          </Field>
+          <Field label="End">
+            <input
+              type={allDay ? "date" : "datetime-local"}
+              value={endsAt}
+              onChange={(e) => setEndsAt(e.target.value)}
+              className="input-field"
+            />
+          </Field>
+        </div>
 
-          <div className="grid grid-cols-2 gap-2">
-            <label className="flex flex-col gap-1 text-xs">
-              <span>Start</span>
-              <input
-                type={allDay ? "date" : "datetime-local"}
-                value={startsAt}
-                onChange={(e) => setStartsAt(e.target.value)}
-                className="rounded-md border border-zinc-300 bg-white px-2 py-1.5 text-sm dark:border-zinc-700 dark:bg-zinc-900"
-              />
-            </label>
-            <label className="flex flex-col gap-1 text-xs">
-              <span>End</span>
-              <input
-                type={allDay ? "date" : "datetime-local"}
-                value={endsAt}
-                onChange={(e) => setEndsAt(e.target.value)}
-                className="rounded-md border border-zinc-300 bg-white px-2 py-1.5 text-sm dark:border-zinc-700 dark:bg-zinc-900"
-              />
-            </label>
+        <input
+          value={location ?? ""}
+          onChange={(e) => setLocation(e.target.value)}
+          placeholder="Location"
+          className="input-field"
+        />
+
+        <textarea
+          value={description ?? ""}
+          onChange={(e) => setDescription(e.target.value)}
+          placeholder="Notes"
+          rows={2}
+          className="input-field resize-none"
+        />
+
+        <div className="grid grid-cols-2 gap-2">
+          <Field label="Owner">
+            <select
+              value={ownerId}
+              onChange={(e) => setOwnerId(e.target.value)}
+              className="input-field"
+            >
+              {members.map((m) => (
+                <option key={m.id} value={m.id}>
+                  {m.display_name}
+                </option>
+              ))}
+            </select>
+          </Field>
+          <Field label="Repeats">
+            <select
+              value={rrule}
+              onChange={(e) => setRrule(e.target.value)}
+              className="input-field"
+            >
+              {RRULE_OPTIONS.map((o) => (
+                <option key={o.value} value={o.value}>
+                  {o.label}
+                </option>
+              ))}
+            </select>
+          </Field>
+        </div>
+
+        {error ? (
+          <p className="rounded-lg bg-red-50/80 px-3 py-2 text-xs text-red-700">{error}</p>
+        ) : null}
+
+        {mode === "edit" && event ? (
+          <div className="border-t border-ink-700/8 pt-4">
+            <CommentThread
+              entityType="event"
+              entityId={event.id}
+              members={members}
+              currentUserId={currentUserId}
+            />
           </div>
+        ) : null}
 
-          <input
-            value={location ?? ""}
-            onChange={(e) => setLocation(e.target.value)}
-            placeholder="Location (optional)"
-            className="rounded-md border border-zinc-300 bg-white px-3 py-2 dark:border-zinc-700 dark:bg-zinc-900"
-          />
-
-          <textarea
-            value={description ?? ""}
-            onChange={(e) => setDescription(e.target.value)}
-            placeholder="Notes"
-            rows={2}
-            className="rounded-md border border-zinc-300 bg-white px-3 py-2 dark:border-zinc-700 dark:bg-zinc-900"
-          />
-
-          <div className="grid grid-cols-2 gap-2">
-            <label className="flex flex-col gap-1 text-xs">
-              <span>Owner</span>
-              <select
-                value={ownerId}
-                onChange={(e) => setOwnerId(e.target.value)}
-                className="rounded-md border border-zinc-300 bg-white px-2 py-1.5 text-sm dark:border-zinc-700 dark:bg-zinc-900"
-              >
-                {members.map((m) => (
-                  <option key={m.id} value={m.id}>
-                    {m.display_name}
-                  </option>
-                ))}
-              </select>
-            </label>
-            <label className="flex flex-col gap-1 text-xs">
-              <span>Repeats</span>
-              <select
-                value={rrule}
-                onChange={(e) => setRrule(e.target.value)}
-                className="rounded-md border border-zinc-300 bg-white px-2 py-1.5 text-sm dark:border-zinc-700 dark:bg-zinc-900"
-              >
-                {RRULE_OPTIONS.map((o) => (
-                  <option key={o.value} value={o.value}>
-                    {o.label}
-                  </option>
-                ))}
-              </select>
-            </label>
-          </div>
-
-          {error ? <p className="text-xs text-red-600">{error}</p> : null}
-
-          {mode === "edit" && event ? (
-            <div className="border-t border-zinc-200 pt-3 dark:border-zinc-800">
-              <CommentThread
-                entityType="event"
-                entityId={event.id}
-                members={members}
-                currentUserId={currentUserId}
-              />
-            </div>
-          ) : null}
-
-          <div className="mt-2 flex items-center justify-between">
-            <div>
-              {mode === "edit" ? (
-                <button
-                  type="button"
-                  onClick={remove}
-                  disabled={pending}
-                  className="text-sm text-red-600 hover:underline"
-                >
-                  Delete
-                </button>
-              ) : null}
-            </div>
-            <div className="flex gap-2">
+        <div className="mt-1 flex items-center justify-between">
+          <div>
+            {mode === "edit" ? (
               <button
                 type="button"
-                onClick={onClose}
-                className="rounded-md border border-zinc-300 px-3 py-1.5 text-sm hover:bg-zinc-100 dark:border-zinc-700 dark:hover:bg-zinc-800"
-              >
-                Cancel
-              </button>
-              <button
-                type="submit"
+                onClick={remove}
                 disabled={pending}
-                className="rounded-md bg-zinc-900 px-3 py-1.5 text-sm text-white hover:bg-zinc-800 disabled:opacity-50 dark:bg-white dark:text-zinc-900 dark:hover:bg-zinc-200"
+                className="text-sm font-medium text-red-600 transition hover:text-red-700"
               >
-                {pending ? "Saving…" : "Save"}
+                Delete
               </button>
-            </div>
+            ) : null}
+          </div>
+          <div className="flex gap-2">
+            <button type="button" onClick={onClose} className="btn-ghost">
+              Cancel
+            </button>
+            <button type="submit" disabled={pending} className="btn-primary">
+              {pending ? "Saving…" : "Save"}
+            </button>
           </div>
         </div>
       </form>
     </div>
+  );
+}
+
+function Field({
+  label,
+  children,
+}: {
+  label: string;
+  children: React.ReactNode;
+}) {
+  return (
+    <label className="flex flex-col gap-1">
+      <span className="text-[10px] font-medium uppercase tracking-[0.14em] text-ink-400">
+        {label}
+      </span>
+      {children}
+    </label>
   );
 }
 
@@ -682,8 +722,6 @@ function roundToNextHour(d: Date): Date {
   return x;
 }
 
-// Convert a Date into the value expected by <input type="date|datetime-local">,
-// in local time, since those inputs work in the browser's timezone.
 function toLocalInput(d: Date, allDay: boolean): string {
   const pad = (n: number) => String(n).padStart(2, "0");
   const y = d.getFullYear();
@@ -694,7 +732,6 @@ function toLocalInput(d: Date, allDay: boolean): string {
 }
 
 function fromLocalInput(value: string, allDay: boolean): Date {
-  // date input returns "YYYY-MM-DD"; datetime-local returns "YYYY-MM-DDTHH:MM"
   if (allDay) {
     const [y, m, d] = value.split("-").map(Number);
     return new Date(y, (m ?? 1) - 1, d ?? 1);

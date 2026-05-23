@@ -1,26 +1,333 @@
 @import "tailwindcss";
 
-:root {
-  --background: #ffffff;
-  --foreground: #171717;
-}
+/* ----------------------------------------------------------------------------
+   Sally & Nico palette
+   Cream  — soft, warm paper (Sally's belly)
+   Ink    — warm, near-black with brown undertone (Nico's nose)
+   Amber  — golden retriever fur (both pups)
+---------------------------------------------------------------------------- */
 
 @theme inline {
-  --color-background: var(--background);
-  --color-foreground: var(--foreground);
+  --color-cream-50:  #FCF8EF;
+  --color-cream-100: #F7F0DE;
+  --color-cream-200: #EFE5C7;
+  --color-cream-300: #E4D5A8;
+  --color-cream-400: #D6C189;
+
+  --color-amber-50:  #FEF7E6;
+  --color-amber-100: #FCEAB8;
+  --color-amber-200: #F9D788;
+  --color-amber-300: #F4BD53;
+  --color-amber-400: #EFA32E;
+  --color-amber-500: #E08A14;
+  --color-amber-600: #C2730E;
+  --color-amber-700: #9A5B0C;
+  --color-amber-800: #6F420A;
+  --color-amber-900: #4A2C08;
+
+  --color-ink-50:  #F5F1E8;
+  --color-ink-100: #D9D2C2;
+  --color-ink-200: #B8AE9B;
+  --color-ink-300: #8E826B;
+  --color-ink-400: #5E5340;
+  --color-ink-500: #3E3527;
+  --color-ink-600: #2A2318;
+  --color-ink-700: #1C1610;
+  --color-ink-800: #14100A;
+  --color-ink-900: #0C0906;
+  --color-ink-950: #060403;
+
   --font-sans: var(--font-geist-sans);
   --font-mono: var(--font-geist-mono);
 }
 
-@media (prefers-color-scheme: dark) {
-  :root {
-    --background: #0a0a0a;
-    --foreground: #ededed;
-  }
+/* ----------------------------------------------------------------------------
+   Base & dynamic background
+---------------------------------------------------------------------------- */
+
+html {
+  background: var(--color-cream-50);
+  color: var(--color-ink-700);
+  -webkit-font-smoothing: antialiased;
+  -moz-osx-font-smoothing: grayscale;
+  text-rendering: optimizeLegibility;
 }
 
 body {
-  background: var(--background);
-  color: var(--foreground);
-  font-family: Arial, Helvetica, sans-serif;
+  font-family: var(--font-geist-sans), -apple-system, BlinkMacSystemFont, "SF Pro Text", system-ui, sans-serif;
+  min-height: 100vh;
+  position: relative;
+  overflow-x: hidden;
+}
+
+/* Dynamic gradient background — three slowly drifting amber/cream blobs over a warm cream base.
+   Apple-style ambient depth without distracting motion. */
+body::before {
+  content: "";
+  position: fixed;
+  inset: 0;
+  z-index: -2;
+  background:
+    radial-gradient(60vmax 60vmax at 12% 18%, rgba(244, 189, 83, 0.45), transparent 60%),
+    radial-gradient(55vmax 55vmax at 88% 12%, rgba(224, 138, 20, 0.30), transparent 60%),
+    radial-gradient(70vmax 70vmax at 75% 95%, rgba(239, 163, 46, 0.35), transparent 60%),
+    radial-gradient(65vmax 65vmax at 10% 90%, rgba(252, 234, 184, 0.55), transparent 65%),
+    linear-gradient(180deg, var(--color-cream-50) 0%, var(--color-cream-100) 100%);
+  background-attachment: fixed;
+  animation: aurora 32s ease-in-out infinite alternate;
+}
+
+/* Subtle grain to mimic Apple's frosted depth */
+body::after {
+  content: "";
+  position: fixed;
+  inset: 0;
+  z-index: -1;
+  pointer-events: none;
+  opacity: 0.05;
+  background-image: url("data:image/svg+xml,%3Csvg viewBox='0 0 200 200' xmlns='http://www.w3.org/2000/svg'%3E%3Cfilter id='n'%3E%3CfeTurbulence type='fractalNoise' baseFrequency='0.85' numOctaves='2' stitchTiles='stitch'/%3E%3CfeColorMatrix values='0 0 0 0 0.05 0 0 0 0 0.04 0 0 0 0 0.02 0 0 0 0.9 0'/%3E%3C/filter%3E%3Crect width='100%25' height='100%25' filter='url(%23n)'/%3E%3C/svg%3E");
+  mix-blend-mode: multiply;
+}
+
+@keyframes aurora {
+  0% {
+    background-position:
+      0% 0%,
+      0% 0%,
+      0% 0%,
+      0% 0%,
+      0% 0%;
+    filter: hue-rotate(0deg);
+  }
+  100% {
+    background-position:
+      8% 4%,
+      -6% 8%,
+      4% -6%,
+      -4% 6%,
+      0% 0%;
+    filter: hue-rotate(-6deg);
+  }
+}
+
+@media (prefers-reduced-motion: reduce) {
+  body::before {
+    animation: none;
+  }
+}
+
+/* ----------------------------------------------------------------------------
+   Premium surfaces
+---------------------------------------------------------------------------- */
+
+@utility glass {
+  background: rgba(252, 248, 239, 0.65);
+  backdrop-filter: saturate(180%) blur(20px);
+  -webkit-backdrop-filter: saturate(180%) blur(20px);
+  border: 1px solid rgba(28, 22, 16, 0.08);
+}
+
+@utility glass-strong {
+  background: rgba(252, 248, 239, 0.85);
+  backdrop-filter: saturate(180%) blur(28px);
+  -webkit-backdrop-filter: saturate(180%) blur(28px);
+  border: 1px solid rgba(28, 22, 16, 0.10);
+}
+
+@utility glass-dark {
+  background: rgba(20, 16, 10, 0.55);
+  backdrop-filter: saturate(180%) blur(24px);
+  -webkit-backdrop-filter: saturate(180%) blur(24px);
+  border: 1px solid rgba(247, 240, 222, 0.10);
+  color: var(--color-cream-50);
+}
+
+/* Premium shadow stack (Apple's layered drop shadows) */
+@utility shadow-soft {
+  box-shadow:
+    0 1px 2px rgba(28, 22, 16, 0.04),
+    0 2px 8px rgba(28, 22, 16, 0.06),
+    0 12px 32px rgba(28, 22, 16, 0.05);
+}
+
+@utility shadow-lift {
+  box-shadow:
+    0 2px 4px rgba(28, 22, 16, 0.06),
+    0 8px 16px rgba(28, 22, 16, 0.08),
+    0 24px 48px rgba(28, 22, 16, 0.10);
+}
+
+@utility shadow-deep {
+  box-shadow:
+    0 4px 8px rgba(28, 22, 16, 0.10),
+    0 16px 32px rgba(28, 22, 16, 0.12),
+    0 32px 64px rgba(28, 22, 16, 0.18);
+}
+
+/* Amber gradient for primary actions — golden retriever fur in light */
+@utility bg-amber-gradient {
+  background-image: linear-gradient(135deg, var(--color-amber-300) 0%, var(--color-amber-500) 50%, var(--color-amber-600) 100%);
+}
+
+@utility ring-amber-glow {
+  box-shadow: 0 0 0 3px rgba(244, 189, 83, 0.25), 0 1px 2px rgba(28, 22, 16, 0.08);
+}
+
+/* ----------------------------------------------------------------------------
+   Form element resets
+---------------------------------------------------------------------------- */
+
+input, textarea, select, button {
+  font-family: inherit;
+}
+
+input[type="text"], input[type="email"], input[type="password"],
+input[type="date"], input[type="datetime-local"], input[type="search"],
+textarea, select {
+  color: var(--color-ink-700);
+}
+
+input::placeholder, textarea::placeholder {
+  color: var(--color-ink-300);
+}
+
+button:focus-visible, a:focus-visible, input:focus-visible, select:focus-visible, textarea:focus-visible {
+  outline: 2px solid var(--color-amber-400);
+  outline-offset: 2px;
+  border-radius: 6px;
+}
+
+::selection {
+  background: var(--color-amber-200);
+  color: var(--color-ink-900);
+}
+
+/* Scrollbars — minimal warm */
+::-webkit-scrollbar { width: 10px; height: 10px; }
+::-webkit-scrollbar-track { background: transparent; }
+::-webkit-scrollbar-thumb {
+  background: rgba(28, 22, 16, 0.15);
+  border-radius: 10px;
+  border: 2px solid transparent;
+  background-clip: padding-box;
+}
+::-webkit-scrollbar-thumb:hover { background: rgba(28, 22, 16, 0.25); background-clip: padding-box; border: 2px solid transparent; }
+
+/* ----------------------------------------------------------------------------
+   Premium element classes
+---------------------------------------------------------------------------- */
+
+@utility btn-primary {
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  gap: 0.5rem;
+  padding: 0.625rem 1rem;
+  border-radius: 0.75rem;
+  font-size: 0.875rem;
+  font-weight: 500;
+  color: var(--color-ink-900);
+  background-image: linear-gradient(135deg, var(--color-amber-300) 0%, var(--color-amber-500) 100%);
+  box-shadow:
+    inset 0 1px 0 rgba(255, 255, 255, 0.35),
+    0 1px 2px rgba(28, 22, 16, 0.08),
+    0 4px 12px rgba(224, 138, 20, 0.25);
+  transition: transform 120ms ease, box-shadow 180ms ease, filter 180ms ease;
+}
+
+@utility btn-primary {
+  &:hover {
+    filter: brightness(1.04);
+    box-shadow:
+      inset 0 1px 0 rgba(255, 255, 255, 0.35),
+      0 2px 4px rgba(28, 22, 16, 0.10),
+      0 8px 20px rgba(224, 138, 20, 0.35);
+  }
+  &:active {
+    transform: translateY(1px);
+    filter: brightness(0.98);
+  }
+  &:disabled {
+    opacity: 0.5;
+    cursor: not-allowed;
+    filter: grayscale(0.4);
+  }
+}
+
+@utility btn-ghost {
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  gap: 0.5rem;
+  padding: 0.5rem 0.875rem;
+  border-radius: 0.625rem;
+  font-size: 0.8125rem;
+  font-weight: 500;
+  color: var(--color-ink-600);
+  background: rgba(252, 248, 239, 0.4);
+  border: 1px solid rgba(28, 22, 16, 0.08);
+  transition: background 160ms ease, color 160ms ease, border-color 160ms ease;
+}
+
+@utility btn-ghost {
+  &:hover {
+    background: rgba(252, 248, 239, 0.85);
+    color: var(--color-ink-900);
+    border-color: rgba(28, 22, 16, 0.14);
+  }
+}
+
+@utility input-field {
+  width: 100%;
+  padding: 0.625rem 0.875rem;
+  border-radius: 0.625rem;
+  font-size: 0.875rem;
+  color: var(--color-ink-700);
+  background: rgba(252, 248, 239, 0.7);
+  backdrop-filter: blur(12px);
+  border: 1px solid rgba(28, 22, 16, 0.10);
+  transition: border-color 160ms ease, box-shadow 160ms ease, background 160ms ease;
+}
+
+@utility input-field {
+  &:hover { background: rgba(252, 248, 239, 0.85); }
+  &:focus {
+    outline: none;
+    border-color: var(--color-amber-400);
+    box-shadow: 0 0 0 4px rgba(244, 189, 83, 0.18);
+    background: rgba(252, 248, 239, 0.95);
+  }
+}
+
+@utility card {
+  background: rgba(252, 248, 239, 0.65);
+  backdrop-filter: saturate(180%) blur(20px);
+  -webkit-backdrop-filter: saturate(180%) blur(20px);
+  border: 1px solid rgba(28, 22, 16, 0.07);
+  border-radius: 1.25rem;
+  box-shadow:
+    0 1px 2px rgba(28, 22, 16, 0.04),
+    0 8px 24px rgba(28, 22, 16, 0.06);
+}
+
+/* ----------------------------------------------------------------------------
+   Animations
+---------------------------------------------------------------------------- */
+
+@keyframes fade-in {
+  from { opacity: 0; transform: translateY(4px); }
+  to   { opacity: 1; transform: translateY(0); }
+}
+
+@keyframes scale-in {
+  from { opacity: 0; transform: scale(0.96); }
+  to   { opacity: 1; transform: scale(1); }
+}
+
+@utility animate-fade-in {
+  animation: fade-in 320ms cubic-bezier(0.22, 1, 0.36, 1);
+}
+
+@utility animate-scale-in {
+  animation: scale-in 220ms cubic-bezier(0.22, 1, 0.36, 1);
 }

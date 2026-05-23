@@ -92,23 +92,24 @@ export function CommentThread({
   }
 
   return (
-    <div className="flex flex-col gap-2 text-sm">
-      <h3 className="text-xs font-medium uppercase tracking-wide text-zinc-500">
+    <div className="flex flex-col gap-3">
+      <h3 className="text-[10px] font-semibold uppercase tracking-[0.18em] text-ink-400">
         Comments
       </h3>
-      <ul className="flex flex-col gap-1.5">
+
+      <ul className="flex flex-col gap-2">
         {comments.map((c) => {
           const author = c.author_id ? memberMap.get(c.author_id) : null;
           const isMine = c.author_id === currentUserId;
           return (
             <li
               key={c.id}
-              className="group rounded-md border border-zinc-200 bg-zinc-50 px-3 py-2 dark:border-zinc-800 dark:bg-zinc-900"
+              className="group rounded-xl border border-ink-700/6 bg-cream-50/60 px-3 py-2 backdrop-blur"
             >
-              <div className="flex items-center justify-between text-xs text-zinc-500">
+              <div className="flex items-center justify-between text-[11px] text-ink-400">
                 <span>
                   <span
-                    className="font-medium"
+                    className="font-semibold"
                     style={author ? { color: author.color } : undefined}
                   >
                     {author?.display_name ?? "Someone"}
@@ -130,27 +131,23 @@ export function CommentThread({
                   </button>
                 ) : null}
               </div>
-              <p className="mt-0.5 whitespace-pre-wrap">{c.body}</p>
+              <p className="mt-1 whitespace-pre-wrap text-sm text-ink-800">{c.body}</p>
             </li>
           );
         })}
         {comments.length === 0 ? (
-          <li className="text-xs text-zinc-400">No comments yet.</li>
+          <li className="text-xs text-ink-300">No comments yet.</li>
         ) : null}
       </ul>
 
-      <form onSubmit={submit} className="mt-1 flex gap-2">
+      <form onSubmit={submit} className="flex gap-2">
         <input
           value={draft}
           onChange={(e) => setDraft(e.target.value)}
           placeholder="Add a comment…"
-          className="min-w-0 flex-1 rounded-md border border-zinc-300 bg-white px-2 py-1.5 text-sm dark:border-zinc-700 dark:bg-zinc-900"
+          className="input-field flex-1"
         />
-        <button
-          type="submit"
-          disabled={!draft.trim()}
-          className="rounded-md bg-zinc-900 px-3 py-1.5 text-xs text-white disabled:opacity-50 dark:bg-white dark:text-zinc-900"
-        >
+        <button type="submit" disabled={!draft.trim()} className="btn-primary">
           Post
         </button>
       </form>

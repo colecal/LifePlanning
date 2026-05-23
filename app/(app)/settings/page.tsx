@@ -21,36 +21,52 @@ export default async function SettingsPage() {
 
   return (
     <div className="flex flex-col gap-6">
-      <div>
-        <h1 className="text-2xl font-semibold tracking-tight">Settings</h1>
-        <p className="text-sm text-zinc-500">Manage your calendar feed and preferences.</p>
-      </div>
-
-      <section className="rounded-xl border border-zinc-200 bg-white p-5 dark:border-zinc-800 dark:bg-zinc-950">
-        <h2 className="mb-1 text-sm font-medium uppercase tracking-wide text-zinc-500">
-          Phone calendar feed
-        </h2>
-        <p className="mb-4 text-sm text-zinc-600 dark:text-zinc-400">
-          Subscribe your phone to see all household events. Keep this URL private —
-          anyone with it can read your calendar.
+      <header>
+        <p className="text-sm font-medium uppercase tracking-[0.18em] text-amber-700">
+          Settings
         </p>
+        <h1 className="text-3xl font-semibold tracking-tight text-ink-900 sm:text-4xl">
+          Preferences
+        </h1>
+      </header>
 
-        <FeedUrlBox webcalUrl={webcalUrl} httpsUrl={httpsUrl} />
+      <section className="card overflow-hidden">
+        <div className="border-b border-ink-700/8 px-6 py-5">
+          <h2 className="text-base font-semibold text-ink-900">Phone calendar feed</h2>
+          <p className="mt-1 text-sm text-ink-500">
+            Subscribe your phone to see household events anywhere. Keep this URL
+            private — anyone with it can read your calendar.
+          </p>
+        </div>
 
-        <div className="mt-6 space-y-4 text-sm text-zinc-600 dark:text-zinc-400">
-          <div>
-            <p className="font-medium text-zinc-700 dark:text-zinc-300">iPhone (Apple Calendar)</p>
-            <ol className="ml-5 mt-1 list-decimal space-y-0.5">
-              <li>Tap the <span className="font-mono">webcal://</span> link above on your phone.</li>
-              <li>Confirm &quot;Subscribe&quot; → events appear in the Calendar app within a few minutes.</li>
-            </ol>
-          </div>
-          <div>
-            <p className="font-medium text-zinc-700 dark:text-zinc-300">Google Calendar</p>
-            <ol className="ml-5 mt-1 list-decimal space-y-0.5">
-              <li>Go to calendar.google.com → settings (gear icon) → <em>Add calendar</em> → <em>From URL</em>.</li>
-              <li>Paste the <span className="font-mono">https://</span> URL above and click <em>Add calendar</em>.</li>
-            </ol>
+        <div className="px-6 py-5">
+          <FeedUrlBox webcalUrl={webcalUrl} httpsUrl={httpsUrl} />
+
+          <div className="mt-6 grid grid-cols-1 gap-5 text-sm text-ink-600 sm:grid-cols-2">
+            <div>
+              <div className="mb-2 flex items-center gap-2">
+                <span className="grid h-7 w-7 place-items-center rounded-lg bg-ink-900 text-white">
+
+                </span>
+                <p className="font-semibold text-ink-900">Apple Calendar</p>
+              </div>
+              <ol className="ml-4 list-decimal space-y-1 text-[13px]">
+                <li>Tap the <span className="font-mono text-amber-700">webcal://</span> link above on your phone.</li>
+                <li>Confirm <em>Subscribe</em> — events appear in Calendar.</li>
+              </ol>
+            </div>
+            <div>
+              <div className="mb-2 flex items-center gap-2">
+                <span className="grid h-7 w-7 place-items-center rounded-lg bg-amber-gradient text-ink-900 font-bold">
+                  G
+                </span>
+                <p className="font-semibold text-ink-900">Google Calendar</p>
+              </div>
+              <ol className="ml-4 list-decimal space-y-1 text-[13px]">
+                <li>calendar.google.com → settings → <em>Add calendar</em> → <em>From URL</em>.</li>
+                <li>Paste the <span className="font-mono text-amber-700">https://</span> URL → <em>Add</em>.</li>
+              </ol>
+            </div>
           </div>
         </div>
       </section>
