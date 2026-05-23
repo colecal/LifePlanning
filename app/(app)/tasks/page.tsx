@@ -1,8 +1,18 @@
-export default function TasksPage() {
-  return (
-    <div className="rounded-xl border border-dashed border-zinc-300 p-12 text-center text-sm text-zinc-500 dark:border-zinc-700">
-      <p className="text-lg font-medium text-zinc-700 dark:text-zinc-300">Tasks</p>
-      <p className="mt-1">Coming in the next phase.</p>
-    </div>
-  );
+import { createClient } from "@/lib/supabase/server";
+import { getCurrentUserAndHousehold, getHouseholdMembers } from "@/lib/data";
+import { TasksView } from "./TasksView";
+
+export default async function TasksPage() {
+  const supabase = await createClient();
+  const { householdId } = await getCurrentUserAndHousehold();
+
+  const { data: tasks } = await supabase
+    .from("tasks")
+    .select("id, title, notes, due_at, assignee_id, status, created_at")
+    .eq("household_id", householdId)
+    .order("due_at", { ascending: true, nullsFirst: false });
+
+  const members = await getHouseholdMembers();
+
+  return <TasksView initialTasks={tasks ?? []} members={members} />;
 }
