@@ -4,7 +4,7 @@ import { CalendarView } from "./CalendarView";
 
 export default async function CalendarPage() {
   const supabase = await createClient();
-  const { householdId } = await getCurrentUserAndHousehold();
+  const { userId, householdId } = await getCurrentUserAndHousehold();
   const members = await getHouseholdMembers();
 
   // Pull a wide window so client-side recurrence expansion has source events
@@ -27,6 +27,7 @@ export default async function CalendarPage() {
       initialEvents={events ?? []}
       members={members}
       householdId={householdId}
+      currentUserId={userId}
     />
   );
 }

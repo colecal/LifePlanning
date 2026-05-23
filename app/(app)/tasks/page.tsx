@@ -13,6 +13,13 @@ export default async function TasksPage() {
     .order("due_at", { ascending: true, nullsFirst: false });
 
   const members = await getHouseholdMembers();
+  const { userId } = await getCurrentUserAndHousehold();
 
-  return <TasksView initialTasks={tasks ?? []} members={members} />;
+  return (
+    <TasksView
+      initialTasks={tasks ?? []}
+      members={members}
+      currentUserId={userId}
+    />
+  );
 }

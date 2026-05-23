@@ -1,8 +1,18 @@
-export default function NotesPage() {
-  return (
-    <div className="rounded-xl border border-dashed border-zinc-300 p-12 text-center text-sm text-zinc-500 dark:border-zinc-700">
-      <p className="text-lg font-medium text-zinc-700 dark:text-zinc-300">Notes</p>
-      <p className="mt-1">Coming in the next phase.</p>
-    </div>
-  );
+import { createClient } from "@/lib/supabase/server";
+import { getCurrentUserAndHousehold, getHouseholdMembers } from "@/lib/data";
+import { NotesView } from "./NotesView";
+
+export default async function NotesPage() {
+  const supabase = await createClient();
+  const { householdId } = await getCurrentUserAndHousehold();
+
+  const { data: notes } = await supabase
+    .from("notes")
+    .select("id, title, body, updated_by, updated_at")
+    .eq("household_id", householdId)
+    .order("updated_at", { ascending: false });
+
+  const members = await getHouseholdMembers();
+
+  return <NotesView initialNotes={notes ?? []} members={members} />;
 }

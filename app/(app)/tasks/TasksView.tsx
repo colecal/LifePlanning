@@ -9,6 +9,7 @@ import {
   deleteTaskAction,
   updateTaskAction,
 } from "./actions";
+import { TaskDetailModal } from "./TaskDetailModal";
 
 type Task = {
   id: string;
@@ -23,15 +24,18 @@ type Task = {
 export function TasksView({
   initialTasks,
   members,
+  currentUserId,
 }: {
   initialTasks: Task[];
   members: Profile[];
+  currentUserId: string;
 }) {
   const [tasks, setTasks] = useState<Task[]>(initialTasks);
   const [title, setTitle] = useState("");
   const [due, setDue] = useState("");
   const [assignee, setAssignee] = useState("");
   const [pending, startTransition] = useTransition();
+  const [openTaskId, setOpenTaskId] = useState<string | null>(null);
 
   useEffect(() => {
     const supabase = createClient();
@@ -186,6 +190,7 @@ export function TasksView({
               onToggle={() => toggle(t)}
               onAssignee={(id) => setAssigneeFor(t, id)}
               onDelete={() => remove(t)}
+              onOpen={() => setOpenTaskId(t.id)}
             />
           ))}
           {open.length === 0 ? (
@@ -195,6 +200,26 @@ export function TasksView({
           ) : null}
         </ul>
       </section>
+
+      {openTaskId
+        ? (() => {
+            const t = tasks.find((x) => x.id === openTaskId);
+            if (!t) return null;
+            return (
+              <TaskDetailModal
+                task={t}
+                members={members}
+                currentUserId={currentUserId}
+                onClose={() => setOpenTaskId(null)}
+                onLocalChange={(patch) =>
+                  setTasks((prev) =>
+                    prev.map((p) => (p.id === t.id ? { ...p, ...patch } : p)),
+                  )
+                }
+              />
+            );
+          })()
+        : null}
 
       {done.length > 0 ? (
         <section>
@@ -211,6 +236,7 @@ export function TasksView({
                 onToggle={() => toggle(t)}
                 onAssignee={(id) => setAssigneeFor(t, id)}
                 onDelete={() => remove(t)}
+                onOpen={() => setOpenTaskId(t.id)}
               />
             ))}
           </ul>
@@ -227,6 +253,7 @@ function TaskRow({
   onToggle,
   onAssignee,
   onDelete,
+  onOpen,
 }: {
   task: Task;
   members: Profile[];
@@ -234,6 +261,7 @@ function TaskRow({
   onToggle: () => void;
   onAssignee: (id: string | null) => void;
   onDelete: () => void;
+  onOpen: () => void;
 }) {
   const assignee = task.assignee_id ? memberMap.get(task.assignee_id) : null;
   const isDone = task.status === "done";
@@ -248,9 +276,15 @@ function TaskRow({
         onChange={onToggle}
         className="h-4 w-4"
       />
-      <span className={`flex-1 ${isDone ? "text-zinc-400 line-through" : ""}`}>
+      <button
+        type="button"
+        onClick={onOpen}
+        className={`flex-1 truncate text-left hover:underline ${
+          isDone ? "text-zinc-400 line-through" : ""
+        }`}
+      >
         {task.title}
-      </span>
+      </button>
       {due ? (
         <span
           className={`text-xs ${

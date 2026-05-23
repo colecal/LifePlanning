@@ -17,6 +17,7 @@ import {
 import { RRule, rrulestr } from "rrule";
 import { createClient } from "@/lib/supabase/client";
 import type { Profile } from "@/lib/data";
+import { CommentThread } from "@/app/components/CommentThread";
 import { deleteEventAction, saveEventAction } from "./actions";
 
 type DbEvent = {
@@ -77,10 +78,12 @@ export function CalendarView({
   initialEvents,
   members,
   householdId: _householdId,
+  currentUserId,
 }: {
   initialEvents: DbEvent[];
   members: Profile[];
   householdId: string;
+  currentUserId: string;
 }) {
   const [events, setEvents] = useState<DbEvent[]>(initialEvents);
   const [view, setView] = useState<"month" | "agenda">("month");
@@ -260,6 +263,7 @@ export function CalendarView({
           event={modal.mode === "edit" ? modal.event : null}
           defaultDate={modal.mode === "create" ? modal.defaultDate : null}
           members={members}
+          currentUserId={currentUserId}
           onClose={() => setModal(null)}
         />
       ) : null}
@@ -449,12 +453,14 @@ function EventModal({
   event,
   defaultDate,
   members,
+  currentUserId,
   onClose,
 }: {
   mode: "create" | "edit";
   event: DbEvent | null;
   defaultDate: Date | null;
   members: Profile[];
+  currentUserId: string;
   onClose: () => void;
 }) {
   const initialStart = event
@@ -621,6 +627,17 @@ function EventModal({
           </div>
 
           {error ? <p className="text-xs text-red-600">{error}</p> : null}
+
+          {mode === "edit" && event ? (
+            <div className="border-t border-zinc-200 pt-3 dark:border-zinc-800">
+              <CommentThread
+                entityType="event"
+                entityId={event.id}
+                members={members}
+                currentUserId={currentUserId}
+              />
+            </div>
+          ) : null}
 
           <div className="mt-2 flex items-center justify-between">
             <div>
