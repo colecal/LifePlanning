@@ -461,10 +461,10 @@ function AgendaList({
         <div key={date}>
           <div className="mb-2 flex items-baseline gap-3 px-1">
             <span className="text-2xl font-semibold text-ink-900">
-              {format(new Date(date), "d")}
+              {format(parseLocalISODate(date), "d")}
             </span>
             <span className="text-sm font-medium text-ink-400">
-              {format(new Date(date), "EEEE, MMM yyyy")}
+              {format(parseLocalISODate(date), "EEEE, MMM yyyy")}
             </span>
           </div>
           <ul className="card flex flex-col divide-y divide-ink-700/8 overflow-hidden">
@@ -768,4 +768,11 @@ function fromLocalInput(value: string, allDay: boolean): Date {
     return new Date(y, (m ?? 1) - 1, d ?? 1);
   }
   return new Date(value);
+}
+
+// Parse a "yyyy-MM-dd" string as local time. `new Date("2025-12-25")` would
+// parse it as UTC midnight and shift to the previous day west of UTC.
+function parseLocalISODate(s: string): Date {
+  const [y, m, d] = s.split("-").map(Number);
+  return new Date(y, (m ?? 1) - 1, d ?? 1);
 }
