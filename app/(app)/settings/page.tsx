@@ -2,17 +2,23 @@ import { createClient } from "@/lib/supabase/server";
 import { headers } from "next/headers";
 import { FeedUrlBox } from "./FeedUrlBox";
 import { ThemeToggle } from "./ThemeToggle";
+import { AccountSection } from "./AccountSection";
 
 export default async function SettingsPage() {
   const supabase = await createClient();
   const {
     data: { user },
   } = await supabase.auth.getUser();
-  const { data: token } = await supabase
-    .from("feed_tokens")
-    .select("token")
-    .eq("profile_id", user!.id)
-    .single();
+  const [tokenR, profileR] = await Promise.all([
+    supabase.from("feed_tokens").select("token").eq("profile_id", user!.id).single(),
+    supabase
+      .from("profiles")
+      .select("display_name, color, email_digest_enabled")
+      .eq("id", user!.id)
+      .single(),
+  ]);
+  const token = tokenR.data;
+  const profile = profileR.data;
 
   const h = await headers();
   const host = h.get("host") ?? "mi-vida-loca.vercel.app";
@@ -30,6 +36,21 @@ export default async function SettingsPage() {
           Preferences
         </h1>
       </header>
+
+      <section className="card overflow-hidden">
+        <div className="border-b border-ink-700/8 px-6 py-5">
+          <h2 className="text-base font-semibold text-ink-900">Account</h2>
+          <p className="mt-1 text-sm text-ink-500">Your profile and password.</p>
+        </div>
+        <div className="px-6 py-5">
+          {profile ? (
+            <AccountSection
+              profile={profile}
+              email={user!.email ?? ""}
+            />
+          ) : null}
+        </div>
+      </section>
 
       <section className="card overflow-hidden">
         <div className="border-b border-ink-700/8 px-6 py-5">
