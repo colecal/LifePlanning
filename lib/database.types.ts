@@ -410,6 +410,87 @@ export type Database = {
         }
         Relationships: []
       }
+      trips: {
+        Row: {
+          color: string
+          created_at: string
+          created_by: string | null
+          destination: string | null
+          ends_on: string
+          household_id: string
+          id: string
+          name: string
+          notes: string | null
+          starts_on: string
+          updated_at: string
+        }
+        Insert: {
+          color?: string
+          created_at?: string
+          created_by?: string | null
+          destination?: string | null
+          ends_on: string
+          household_id: string
+          id?: string
+          name: string
+          notes?: string | null
+          starts_on: string
+          updated_at?: string
+        }
+        Update: {
+          color?: string
+          created_at?: string
+          created_by?: string | null
+          destination?: string | null
+          ends_on?: string
+          household_id?: string
+          id?: string
+          name?: string
+          notes?: string | null
+          starts_on?: string
+          updated_at?: string
+        }
+        Relationships: []
+      }
+      trip_packing: {
+        Row: {
+          assignee_id: string | null
+          category: string | null
+          checked: boolean
+          content: string
+          created_at: string
+          created_by: string | null
+          household_id: string
+          id: string
+          position: number
+          trip_id: string
+        }
+        Insert: {
+          assignee_id?: string | null
+          category?: string | null
+          checked?: boolean
+          content: string
+          created_at?: string
+          created_by?: string | null
+          household_id: string
+          id?: string
+          position?: number
+          trip_id: string
+        }
+        Update: {
+          assignee_id?: string | null
+          category?: string | null
+          checked?: boolean
+          content?: string
+          created_at?: string
+          created_by?: string | null
+          household_id?: string
+          id?: string
+          position?: number
+          trip_id?: string
+        }
+        Relationships: []
+      }
       profiles: {
         Row: {
           avatar_url: string | null
