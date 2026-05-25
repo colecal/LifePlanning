@@ -1,6 +1,7 @@
 import { signOutAction } from "../login/actions";
 import { getCurrentProfile } from "@/lib/data";
 import { AppNav } from "@/app/components/AppNav";
+import { QuickCapture } from "@/app/components/QuickCapture";
 
 export default async function AppLayout({
   children,
@@ -19,6 +20,8 @@ export default async function AppLayout({
       <main className="mx-auto w-full max-w-6xl flex-1 px-4 py-6 sm:px-5 sm:py-8 animate-fade-in">
         {children}
       </main>
+
+      <QuickCapture />
     </div>
   );
 }

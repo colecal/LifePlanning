@@ -1,7 +1,8 @@
 import Link from "next/link";
-import { format, isToday, startOfDay } from "date-fns";
+import { format, formatDistanceToNow, isToday, startOfDay } from "date-fns";
 import { createClient } from "@/lib/supabase/server";
 import { getCurrentUserAndHousehold, getHouseholdMembers } from "@/lib/data";
+import { getRecentActivity } from "@/lib/activity";
 
 export default async function HomePage() {
   const supabase = await createClient();
@@ -12,7 +13,7 @@ export default async function HomePage() {
   endOfDay.setHours(23, 59, 59, 999);
 
   // Fire independent queries in parallel
-  const [membersR, nextEventsR, todayTasksR, groceryListR, petsR] = await Promise.all([
+  const [membersR, nextEventsR, todayTasksR, groceryListR, petsR, activity] = await Promise.all([
     getHouseholdMembers(),
     supabase
       .from("events")
@@ -41,6 +42,7 @@ export default async function HomePage() {
       .select("id, name, color")
       .eq("household_id", householdId)
       .order("created_at", { ascending: true }),
+    getRecentActivity(householdId, 8),
   ]);
 
   const members = membersR;
@@ -208,6 +210,49 @@ export default async function HomePage() {
                   <span className="ml-auto text-xs text-ink-400">
                     {lastFed ? `Fed ${formatAgoShort(lastFed)}` : "Not yet fed"}
                   </span>
+                </li>
+              );
+            })}
+          </ul>
+        </section>
+      ) : null}
+
+      {activity.length > 0 ? (
+        <section className="card flex flex-col gap-3 p-5">
+          <h2 className="text-xs font-medium uppercase tracking-[0.16em] text-ink-400">
+            Activity
+          </h2>
+          <ul className="flex flex-col gap-2">
+            {activity.map((a) => {
+              const actor = a.actor_id ? memberMap.get(a.actor_id) : null;
+              return (
+                <li key={a.id}>
+                  <Link
+                    href={a.href}
+                    className="flex items-start gap-3 rounded-lg px-2 py-1.5 text-sm transition hover:bg-cream-100/50"
+                  >
+                    <span
+                      className="mt-1.5 inline-block h-2 w-2 shrink-0 rounded-full"
+                      style={{ backgroundColor: actor?.color ?? "var(--color-ink-300)" }}
+                    />
+                    <div className="min-w-0 flex-1">
+                      <p className="truncate text-ink-700">
+                        <span style={actor ? { color: actor.color } : undefined} className="font-medium">
+                          {actor?.display_name ?? "Someone"}
+                        </span>{" "}
+                        <span className="text-ink-500">{a.title}</span>
+                        {a.detail ? (
+                          <>
+                            {" "}
+                            <span className="text-ink-700">{a.detail}</span>
+                          </>
+                        ) : null}
+                      </p>
+                      <p className="text-[11px] text-ink-400">
+                        {formatDistanceToNow(new Date(a.at), { addSuffix: true })}
+                      </p>
+                    </div>
+                  </Link>
                 </li>
               );
             })}
