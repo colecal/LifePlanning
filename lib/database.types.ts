@@ -338,6 +338,78 @@ export type Database = {
           },
         ]
       }
+      pets: {
+        Row: {
+          birthday: string | null
+          color: string
+          created_at: string
+          household_id: string
+          id: string
+          name: string
+          photo_url: string | null
+          species: string
+          breed: string | null
+        }
+        Insert: {
+          birthday?: string | null
+          color?: string
+          created_at?: string
+          household_id: string
+          id?: string
+          name: string
+          photo_url?: string | null
+          species?: string
+          breed?: string | null
+        }
+        Update: {
+          birthday?: string | null
+          color?: string
+          created_at?: string
+          household_id?: string
+          id?: string
+          name?: string
+          photo_url?: string | null
+          species?: string
+          breed?: string | null
+        }
+        Relationships: []
+      }
+      pet_logs: {
+        Row: {
+          at: string
+          created_at: string
+          created_by: string | null
+          household_id: string
+          id: string
+          kind: string
+          notes: string | null
+          pet_id: string
+          value: string | null
+        }
+        Insert: {
+          at?: string
+          created_at?: string
+          created_by?: string | null
+          household_id: string
+          id?: string
+          kind: string
+          notes?: string | null
+          pet_id: string
+          value?: string | null
+        }
+        Update: {
+          at?: string
+          created_at?: string
+          created_by?: string | null
+          household_id?: string
+          id?: string
+          kind?: string
+          notes?: string | null
+          pet_id?: string
+          value?: string | null
+        }
+        Relationships: []
+      }
       profiles: {
         Row: {
           avatar_url: string | null

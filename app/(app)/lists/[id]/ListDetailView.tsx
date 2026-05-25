@@ -310,8 +310,9 @@ export function ListDetailView({
               </SwipeableRow>
             ))}
             {active.length === 0 ? (
-              <div className="p-10 text-center text-sm text-ink-300">
-                Nothing here. Add something above.
+              <div className="flex flex-col items-center gap-2 p-10 text-center text-sm text-ink-300">
+                <span className="text-3xl" aria-hidden>🐾</span>
+                <span>Nothing here. Add something above.</span>
               </div>
             ) : null}
           </div>

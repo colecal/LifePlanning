@@ -166,7 +166,10 @@ export function NotesView({
             />
           ) : (
             <div className="card grid min-h-[24rem] place-items-center p-12 text-center">
-              <p className="text-sm text-ink-400">Select or create a note.</p>
+              <div>
+                <p className="text-3xl" aria-hidden>📝</p>
+                <p className="mt-2 text-sm text-ink-400">Select or create a note.</p>
+              </div>
             </div>
           )}
         </section>

@@ -263,8 +263,9 @@ export function TasksView({
             </SwipeableRow>
           ))}
           {open.length === 0 ? (
-            <div className="p-12 text-center text-sm text-ink-300">
-              All clear. Nothing on the list.
+            <div className="flex flex-col items-center gap-2 p-12 text-center text-sm text-ink-300">
+              <span className="text-3xl" aria-hidden>🐾</span>
+              <span>All clear. Sally &amp; Nico approve.</span>
             </div>
           ) : null}
         </div>

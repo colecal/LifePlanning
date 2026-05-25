@@ -12,7 +12,7 @@ export default async function HomePage() {
   endOfDay.setHours(23, 59, 59, 999);
 
   // Fire independent queries in parallel
-  const [membersR, nextEventsR, todayTasksR, groceryListR] = await Promise.all([
+  const [membersR, nextEventsR, todayTasksR, groceryListR, petsR] = await Promise.all([
     getHouseholdMembers(),
     supabase
       .from("events")
@@ -36,6 +36,11 @@ export default async function HomePage() {
       .order("created_at", { ascending: false })
       .limit(1)
       .maybeSingle(),
+    supabase
+      .from("pets")
+      .select("id, name, color")
+      .eq("household_id", householdId)
+      .order("created_at", { ascending: true }),
   ]);
 
   const members = membersR;
@@ -43,6 +48,22 @@ export default async function HomePage() {
   const nextEvents = nextEventsR.data;
   const todayTasks = todayTasksR.data;
   const groceryList = groceryListR.data;
+  const pets = petsR.data;
+
+  // Last feeding per pet
+  const petIds = (pets ?? []).map((p) => p.id);
+  const { data: petLastFeed } = petIds.length
+    ? await supabase
+        .from("pet_logs")
+        .select("pet_id, at")
+        .in("pet_id", petIds)
+        .eq("kind", "feeding")
+        .order("at", { ascending: false })
+    : { data: null };
+  const lastFedByPet = new Map<string, string>();
+  for (const log of petLastFeed ?? []) {
+    if (!lastFedByPet.has(log.pet_id)) lastFedByPet.set(log.pet_id, log.at);
+  }
 
   const { data: groceryItems } = groceryList
     ? await supabase
@@ -167,6 +188,33 @@ export default async function HomePage() {
         </Card>
       </div>
 
+      {pets && pets.length > 0 ? (
+        <section className="card flex flex-col gap-3 p-5">
+          <h2 className="text-xs font-medium uppercase tracking-[0.16em] text-ink-400">
+            🐾 Pets
+          </h2>
+          <ul className="flex flex-col gap-2">
+            {pets.map((p) => {
+              const lastFed = lastFedByPet.get(p.id);
+              return (
+                <li key={p.id} className="flex items-center gap-3 text-sm">
+                  <span
+                    className="grid h-8 w-8 shrink-0 place-items-center rounded-full text-base"
+                    style={{ background: `linear-gradient(135deg, ${p.color}cc, ${p.color})` }}
+                  >
+                    🐕
+                  </span>
+                  <span className="font-medium text-ink-800">{p.name}</span>
+                  <span className="ml-auto text-xs text-ink-400">
+                    {lastFed ? `Fed ${formatAgoShort(lastFed)}` : "Not yet fed"}
+                  </span>
+                </li>
+              );
+            })}
+          </ul>
+        </section>
+      ) : null}
+
       <section className="card flex items-center justify-between gap-4 px-6 py-4">
         <div>
           <h2 className="text-xs font-medium uppercase tracking-[0.16em] text-ink-400">
@@ -242,6 +290,21 @@ function Card({
   );
 }
 
+function formatAgoShort(iso: string): string {
+  const diff = Date.now() - new Date(iso).getTime();
+  const mins = Math.floor(diff / 60000);
+  if (mins < 60) return mins < 1 ? "just now" : `${mins}m ago`;
+  const hrs = Math.floor(mins / 60);
+  if (hrs < 24) return `${hrs}h ago`;
+  const days = Math.floor(hrs / 24);
+  return `${days}d ago`;
+}
+
 function Empty({ children }: { children: React.ReactNode }) {
-  return <p className="text-sm text-ink-300">{children}</p>;
+  return (
+    <div className="flex flex-col items-center justify-center gap-1 py-4 text-sm text-ink-300">
+      <span className="text-xl" aria-hidden>🐾</span>
+      <span>{children}</span>
+    </div>
+  );
 }
