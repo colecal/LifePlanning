@@ -2,7 +2,7 @@
 
 import Link from "next/link";
 import { usePathname } from "next/navigation";
-import { useState } from "react";
+import { useEffect, useState } from "react";
 
 type Item = { href: string; label: string; icon: React.ReactNode };
 
@@ -114,6 +114,18 @@ export function AppNav({
 }) {
   const path = usePathname();
   const [moreOpen, setMoreOpen] = useState(false);
+
+  // Signal "More sheet is open" to other UI (QuickCapture FAB hides via CSS)
+  useEffect(() => {
+    if (typeof document === "undefined") return;
+    document.body.classList.toggle("nav-more-open", moreOpen);
+    return () => document.body.classList.remove("nav-more-open");
+  }, [moreOpen]);
+
+  // Close the sheet on route change
+  useEffect(() => {
+    setMoreOpen(false);
+  }, [path]);
 
   const anySecondaryActive = SECONDARY.some((n) => isActive(path, n.href));
 

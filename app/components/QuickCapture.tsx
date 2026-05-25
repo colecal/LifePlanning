@@ -60,7 +60,7 @@ export function QuickCapture() {
       <button
         type="button"
         onClick={() => setOpen(true)}
-        className="bg-amber-gradient fixed bottom-[calc(5.5rem+env(safe-area-inset-bottom))] right-5 z-40 grid h-14 w-14 place-items-center rounded-full text-2xl text-ink-900 shadow-lift transition active:scale-95 sm:bottom-[calc(1.25rem+env(safe-area-inset-bottom))]"
+        className="quick-capture-fab bg-amber-gradient fixed bottom-[calc(5.5rem+env(safe-area-inset-bottom))] right-5 z-40 grid h-14 w-14 place-items-center rounded-full text-2xl text-ink-900 shadow-lift transition active:scale-95 sm:bottom-[calc(1.25rem+env(safe-area-inset-bottom))]"
         aria-label="Quick capture"
       >
         +
