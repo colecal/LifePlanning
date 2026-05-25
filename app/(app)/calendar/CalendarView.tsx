@@ -89,7 +89,7 @@ export function CalendarView({
 }) {
   const [events, setEvents] = useState<DbEvent[]>(initialEvents);
   const [view, setView] = useState<"month" | "week" | "agenda">("month");
-  const [cursor, setCursor] = useState<Date>(startOfMonth(new Date()));
+  const [cursor, setCursor] = useState<Date>(() => new Date());
   const [activeOwners, setActiveOwners] = useState<Set<string>>(
     new Set(members.map((m) => m.id)),
   );
@@ -199,22 +199,22 @@ export function CalendarView({
         <div className="flex items-center justify-between gap-2 sm:justify-end sm:gap-3">
           <div className="card flex items-center gap-1 p-1">
             <button
-              onClick={() => setCursor(addMonths(cursor, -1))}
+              onClick={() => setCursor(stepCursor(cursor, view, -1))}
               className="grid h-9 w-9 place-items-center rounded-lg text-lg text-ink-500 transition hover:bg-cream-100/70 hover:text-ink-900 sm:h-8 sm:w-8 sm:text-base"
-              aria-label="Previous month"
+              aria-label={`Previous ${view === "month" ? "month" : view === "week" ? "week" : "range"}`}
             >
               ‹
             </button>
             <button
-              onClick={() => setCursor(startOfMonth(new Date()))}
+              onClick={() => setCursor(new Date())}
               className="rounded-lg px-3 py-1.5 text-xs font-medium text-ink-600 transition hover:bg-cream-100/70 hover:text-ink-900"
             >
               Today
             </button>
             <button
-              onClick={() => setCursor(addMonths(cursor, 1))}
+              onClick={() => setCursor(stepCursor(cursor, view, 1))}
               className="grid h-9 w-9 place-items-center rounded-lg text-lg text-ink-500 transition hover:bg-cream-100/70 hover:text-ink-900 sm:h-8 sm:w-8 sm:text-base"
-              aria-label="Next month"
+              aria-label={`Next ${view === "month" ? "month" : view === "week" ? "week" : "range"}`}
             >
               ›
             </button>
@@ -964,6 +964,14 @@ function Field({
       {children}
     </label>
   );
+}
+
+// Step the cursor forward or backward in increments matching the active view:
+// month=±1 month, week=±7 days, agenda=±14 days.
+function stepCursor(cursor: Date, view: "month" | "week" | "agenda", dir: 1 | -1): Date {
+  if (view === "month") return addMonths(cursor, dir);
+  if (view === "week") return addDays(cursor, dir * 7);
+  return addDays(cursor, dir * 14);
 }
 
 function roundToNextHour(d: Date): Date {
