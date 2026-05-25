@@ -3,6 +3,7 @@ import { headers } from "next/headers";
 import { FeedUrlBox } from "./FeedUrlBox";
 import { ThemeToggle } from "./ThemeToggle";
 import { AccountSection } from "./AccountSection";
+import { PushNotifications } from "./PushNotifications";
 
 export default async function SettingsPage() {
   const supabase = await createClient();
@@ -61,6 +62,20 @@ export default async function SettingsPage() {
         </div>
         <div className="px-6 py-5">
           <ThemeToggle />
+        </div>
+      </section>
+
+      <section className="card overflow-hidden">
+        <div className="border-b border-ink-700/8 px-6 py-5">
+          <h2 className="text-base font-semibold text-ink-900">Notifications</h2>
+          <p className="mt-1 text-sm text-ink-500">
+            Push notifications on this device.
+          </p>
+        </div>
+        <div className="px-6 py-5">
+          <PushNotifications
+            vapidPublicKey={process.env.NEXT_PUBLIC_VAPID_PUBLIC_KEY ?? ""}
+          />
         </div>
       </section>
 

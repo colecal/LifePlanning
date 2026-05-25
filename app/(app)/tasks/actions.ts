@@ -3,6 +3,7 @@
 import { createClient } from "@/lib/supabase/server";
 import { getCurrentUserAndHousehold } from "@/lib/data";
 import type { TablesUpdate } from "@/lib/database.types";
+import { sendPushToProfiles } from "@/lib/push";
 
 export async function createTaskAction(input: {
   title: string;
@@ -23,6 +24,16 @@ export async function createTaskAction(input: {
     created_by: userId,
   });
   if (error) throw new Error(error.message);
+
+  // Notify the assignee if it's someone other than the creator
+  if (input.assignee_id && input.assignee_id !== userId) {
+    void sendPushToProfiles([input.assignee_id], {
+      title: "New task for you",
+      body: input.title.trim(),
+      url: "/tasks",
+      tag: `task-assign`,
+    });
+  }
 }
 
 export async function updateTaskAction(input: {
@@ -43,8 +54,28 @@ export async function updateTaskAction(input: {
   if (input.notes !== undefined) patch.notes = input.notes;
   if (input.rrule !== undefined) patch.rrule = input.rrule;
 
+  // Fetch the task to know who the actor + previous assignee were
+  const { data: prev } = await supabase
+    .from("tasks")
+    .select("title, assignee_id")
+    .eq("id", input.id)
+    .single();
+
   const { error } = await supabase.from("tasks").update(patch).eq("id", input.id);
   if (error) throw new Error(error.message);
+
+  // Notify on reassignment
+  if (input.assignee_id && prev && input.assignee_id !== prev.assignee_id) {
+    const { userId } = await getCurrentUserAndHousehold();
+    if (input.assignee_id !== userId) {
+      void sendPushToProfiles([input.assignee_id], {
+        title: "Task assigned to you",
+        body: prev.title,
+        url: "/tasks",
+        tag: `task-reassign`,
+      });
+    }
+  }
 }
 
 // Completing a recurring task: instead of marking done, advance due_at to the
