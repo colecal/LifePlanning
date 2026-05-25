@@ -2,7 +2,19 @@ import { createServerClient } from "@supabase/ssr";
 import { NextResponse, type NextRequest } from "next/server";
 import type { Database } from "@/lib/database.types";
 
-const PUBLIC_PATHS = ["/login", "/api/setup", "/api/feed"];
+// Routes accessible without a session. The icon/manifest endpoints MUST be
+// public so iOS Safari and other browsers can fetch them while choosing
+// what to render for the home-screen icon.
+const PUBLIC_PATHS = [
+  "/login",
+  "/api/setup",
+  "/api/feed",
+  "/icon",
+  "/apple-icon",
+  "/favicon.ico",
+  "/manifest.webmanifest",
+  "/sw.js",
+];
 
 export async function updateSession(request: NextRequest) {
   let response = NextResponse.next({ request });
