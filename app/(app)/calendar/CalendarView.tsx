@@ -20,6 +20,7 @@ import type { Profile } from "@/lib/data";
 import { CommentThread } from "@/app/components/CommentThread";
 import { useConfirm } from "@/app/components/ConfirmDialog";
 import { useToast } from "@/app/components/Toast";
+import { SwipeableRow } from "@/app/components/SwipeableRow";
 import { deleteEventAction, saveEventAction } from "./actions";
 
 type DbEvent = {
@@ -98,6 +99,28 @@ export function CalendarView({
     | { mode: "edit"; event: DbEvent }
     | null
   >(null);
+  const confirm = useConfirm();
+  const toast = useToast();
+
+  async function removeEvent(ev: DbEvent) {
+    const ok = await confirm({
+      title: "Delete this event?",
+      message: ev.title,
+      destructive: true,
+      confirmLabel: "Delete",
+    });
+    if (!ok) return;
+    // Optimistic removal
+    setEvents((prev) => prev.filter((p) => p.id !== ev.id));
+    try {
+      await deleteEventAction(ev.id);
+      toast.success("Event deleted");
+    } catch (err) {
+      // Roll back
+      setEvents((prev) => [...prev, ev]);
+      toast.error(err instanceof Error ? err.message : String(err));
+    }
+  }
 
   useEffect(() => {
     const supabase = createClient();
@@ -288,12 +311,14 @@ export function CalendarView({
           memberMap={memberMap}
           onDayClick={(d) => setModal({ mode: "create", defaultDate: d })}
           onEventClick={(ev) => setModal({ mode: "edit", event: ev })}
+          onEventDelete={removeEvent}
         />
       ) : (
         <AgendaList
           occurrences={occurrences}
           memberMap={memberMap}
           onEventClick={(ev) => setModal({ mode: "edit", event: ev })}
+          onEventDelete={removeEvent}
         />
       )}
 
@@ -467,12 +492,14 @@ function WeekView({
   memberMap,
   onDayClick,
   onEventClick,
+  onEventDelete,
 }: {
   rangeStart: Date;
   occurrences: Occurrence[];
   memberMap: Map<string, Profile>;
   onDayClick: (d: Date) => void;
   onEventClick: (e: Occurrence) => void;
+  onEventDelete: (e: DbEvent) => void;
 }) {
   const days = Array.from({ length: 7 }, (_, i) => addDays(rangeStart, i));
   const today = startOfDay(new Date());
@@ -527,37 +554,38 @@ function WeekView({
               {dayEvents.length === 0 ? (
                 <p className="pl-12 text-xs text-ink-300">Nothing scheduled.</p>
               ) : (
-                <ul className="flex flex-col gap-1.5 pl-12">
+                <div className="flex flex-col gap-1.5 pl-12">
                   {dayEvents.map((e, idx) => {
                     const owner = e.owner_id ? memberMap.get(e.owner_id) : null;
                     const color = owner?.color ?? "#9A5B0C";
                     const isContinuation = !isSameDay(day, e.occurrence_start);
                     return (
-                      <li
-                        key={`${e.id}-${idx}`}
-                        onClick={(ev) => {
-                          ev.stopPropagation();
-                          onEventClick(e);
-                        }}
-                        className="flex items-start gap-2 rounded-lg border border-ink-700/8 bg-cream-50/60 px-3 py-2 text-sm"
-                        style={{ borderLeftColor: color, borderLeftWidth: 3 }}
-                      >
-                        <div className="min-w-0 flex-1">
-                          <p className="truncate font-medium text-ink-900">
-                            {isContinuation ? <span className="opacity-60">↳ </span> : null}
-                            {e.title}
-                          </p>
-                          <p className="text-xs text-ink-500">
-                            {e.all_day
-                              ? "All day"
-                              : format(e.occurrence_start, "h:mm a").toLowerCase()}
-                            {e.location ? ` · ${e.location}` : ""}
-                          </p>
+                      <SwipeableRow key={`${e.id}-${idx}`} onDelete={() => onEventDelete(e)}>
+                        <div
+                          onClick={(ev) => {
+                            ev.stopPropagation();
+                            onEventClick(e);
+                          }}
+                          className="flex items-start gap-2 rounded-lg border border-ink-700/8 bg-cream-50/60 px-3 py-2 text-sm"
+                          style={{ borderLeftColor: color, borderLeftWidth: 3 }}
+                        >
+                          <div className="min-w-0 flex-1">
+                            <p className="truncate font-medium text-ink-900">
+                              {isContinuation ? <span className="opacity-60">↳ </span> : null}
+                              {e.title}
+                            </p>
+                            <p className="text-xs text-ink-500">
+                              {e.all_day
+                                ? "All day"
+                                : format(e.occurrence_start, "h:mm a").toLowerCase()}
+                              {e.location ? ` · ${e.location}` : ""}
+                            </p>
+                          </div>
                         </div>
-                      </li>
+                      </SwipeableRow>
                     );
                   })}
-                </ul>
+                </div>
               )}
             </div>
           );
@@ -632,10 +660,12 @@ function AgendaList({
   occurrences,
   memberMap,
   onEventClick,
+  onEventDelete,
 }: {
   occurrences: Occurrence[];
   memberMap: Map<string, Profile>;
   onEventClick: (e: Occurrence) => void;
+  onEventDelete: (e: DbEvent) => void;
 }) {
   const groups = useMemo(() => {
     const g = new Map<string, Occurrence[]>();
@@ -667,37 +697,49 @@ function AgendaList({
               {format(parseLocalISODate(date), "EEEE, MMM yyyy")}
             </span>
           </div>
-          <ul className="card flex flex-col divide-y divide-ink-700/8 overflow-hidden">
+          <div className="card flex flex-col divide-y divide-ink-700/8 overflow-hidden">
             {items.map((e, idx) => {
               const owner = e.owner_id ? memberMap.get(e.owner_id) : null;
               return (
-                <li
-                  key={`${e.id}-${idx}`}
-                  onClick={() => onEventClick(e)}
-                  className="flex cursor-pointer items-center gap-4 px-5 py-3 transition hover:bg-amber-50/40"
-                >
-                  <span
-                    className="inline-block h-2.5 w-2.5 shrink-0 rounded-full"
-                    style={{
-                      backgroundColor: owner?.color ?? "var(--color-amber-500)",
-                      boxShadow: `0 0 0 3px ${(owner?.color ?? "#E08A14")}22`,
-                    }}
-                  />
-                  <span className="w-24 shrink-0 text-sm text-ink-400">
-                    {e.all_day ? "All day" : format(e.occurrence_start, "h:mm a").toLowerCase()}
-                  </span>
-                  <span className="flex-1 truncate text-[15px] font-medium text-ink-900">
-                    {e.title}
-                  </span>
-                  {e.location ? (
-                    <span className="hidden truncate text-xs text-ink-400 sm:block">
-                      {e.location}
+                <SwipeableRow key={`${e.id}-${idx}`} onDelete={() => onEventDelete(e)}>
+                  <div
+                    onClick={() => onEventClick(e)}
+                    className="group flex cursor-pointer items-center gap-4 px-5 py-3 transition hover:bg-amber-50/40"
+                  >
+                    <span
+                      className="inline-block h-2.5 w-2.5 shrink-0 rounded-full"
+                      style={{
+                        backgroundColor: owner?.color ?? "var(--color-amber-500)",
+                        boxShadow: `0 0 0 3px ${(owner?.color ?? "#E08A14")}22`,
+                      }}
+                    />
+                    <span className="w-24 shrink-0 text-sm text-ink-400">
+                      {e.all_day ? "All day" : format(e.occurrence_start, "h:mm a").toLowerCase()}
                     </span>
-                  ) : null}
-                </li>
+                    <span className="flex-1 truncate text-[15px] font-medium text-ink-900">
+                      {e.title}
+                    </span>
+                    {e.location ? (
+                      <span className="hidden truncate text-xs text-ink-400 sm:block">
+                        {e.location}
+                      </span>
+                    ) : null}
+                    <button
+                      type="button"
+                      onClick={(ev) => {
+                        ev.stopPropagation();
+                        onEventDelete(e);
+                      }}
+                      className="hidden text-base text-ink-300 transition group-hover:inline-block hover:text-red-600"
+                      aria-label="Delete event"
+                    >
+                      ×
+                    </button>
+                  </div>
+                </SwipeableRow>
               );
             })}
-          </ul>
+          </div>
         </div>
       ))}
     </div>
@@ -922,19 +964,29 @@ function EventModal({
           </div>
         ) : null}
 
-        <div className="mt-1 flex items-center justify-between">
-          <div>
-            {mode === "edit" ? (
-              <button
-                type="button"
-                onClick={remove}
-                disabled={pending}
-                className="text-sm font-medium text-red-600 transition hover:text-red-700"
-              >
-                Delete
-              </button>
-            ) : null}
-          </div>
+        <div className="mt-1 flex items-center justify-between gap-2">
+          {mode === "edit" ? (
+            <button
+              type="button"
+              onClick={remove}
+              disabled={pending}
+              className="inline-flex items-center gap-1.5 rounded-xl border border-red-300/50 bg-red-50/50 px-3 py-2 text-sm font-medium text-red-700 transition hover:bg-red-100/70"
+            >
+              <svg viewBox="0 0 16 16" className="h-4 w-4" aria-hidden>
+                <path
+                  d="M3 4h10M6.5 4V2.75a.75.75 0 0 1 .75-.75h1.5a.75.75 0 0 1 .75.75V4M5 4l.5 9a1 1 0 0 0 1 1h3a1 1 0 0 0 1-1l.5-9"
+                  stroke="currentColor"
+                  strokeWidth="1.4"
+                  strokeLinecap="round"
+                  strokeLinejoin="round"
+                  fill="none"
+                />
+              </svg>
+              Delete
+            </button>
+          ) : (
+            <span />
+          )}
           <div className="flex gap-2">
             <button type="button" onClick={onClose} className="btn-ghost">
               Cancel
