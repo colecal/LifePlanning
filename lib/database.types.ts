@@ -377,6 +377,7 @@ export type Database = {
           household_id: string
           id: string
           notes: string | null
+          rrule: string | null
           status: string
           title: string
           updated_at: string
@@ -389,6 +390,7 @@ export type Database = {
           household_id: string
           id?: string
           notes?: string | null
+          rrule?: string | null
           status?: string
           title: string
           updated_at?: string
@@ -401,6 +403,7 @@ export type Database = {
           household_id?: string
           id?: string
           notes?: string | null
+          rrule?: string | null
           status?: string
           title?: string
           updated_at?: string

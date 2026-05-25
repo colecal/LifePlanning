@@ -10,7 +10,7 @@ export default async function TasksPage() {
     getHouseholdMembers(),
     supabase
       .from("tasks")
-      .select("id, title, notes, due_at, assignee_id, status, created_at")
+      .select("id, title, notes, due_at, assignee_id, status, rrule, created_at")
       .eq("household_id", householdId)
       .order("due_at", { ascending: true, nullsFirst: false }),
   ]);

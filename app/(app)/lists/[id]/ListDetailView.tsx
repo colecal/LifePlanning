@@ -5,6 +5,7 @@ import { createClient } from "@/lib/supabase/client";
 import type { Profile } from "@/lib/data";
 import { useConfirm } from "@/app/components/ConfirmDialog";
 import { useToast } from "@/app/components/Toast";
+import { SwipeableRow } from "@/app/components/SwipeableRow";
 import {
   addItemAction,
   clearCheckedAction,
@@ -274,44 +275,46 @@ export function ListDetailView({
               <h3 className="mb-2 px-1 text-[10px] font-semibold uppercase tracking-[0.18em] text-amber-700">
                 {cat}
               </h3>
-              <ul className="card flex flex-col divide-y divide-ink-700/6 overflow-hidden">
+              <div className="card flex flex-col divide-y divide-ink-700/6 overflow-hidden">
                 {items.map((it) => (
-                  <ItemRow
-                    key={it.id}
-                    item={it}
-                    members={members}
-                    memberMap={memberMap}
-                    onToggle={() => toggleChecked(it)}
-                    onAssignee={(id) => setAssignee(it, id)}
-                    onCategory={(c) => setCategory(it, c)}
-                    onDelete={() => remove(it)}
-                    isGrocery
-                  />
+                  <SwipeableRow key={it.id} onDelete={() => remove(it)}>
+                    <ItemRow
+                      item={it}
+                      members={members}
+                      memberMap={memberMap}
+                      onToggle={() => toggleChecked(it)}
+                      onAssignee={(id) => setAssignee(it, id)}
+                      onCategory={(c) => setCategory(it, c)}
+                      onDelete={() => remove(it)}
+                      isGrocery
+                    />
+                  </SwipeableRow>
                 ))}
-              </ul>
+              </div>
             </div>
           ))
         ) : (
-          <ul className="card flex flex-col divide-y divide-ink-700/6 overflow-hidden">
+          <div className="card flex flex-col divide-y divide-ink-700/6 overflow-hidden">
             {active.map((it) => (
-              <ItemRow
-                key={it.id}
-                item={it}
-                members={members}
-                memberMap={memberMap}
-                onToggle={() => toggleChecked(it)}
-                onAssignee={(id) => setAssignee(it, id)}
-                onCategory={() => {}}
-                onDelete={() => remove(it)}
-                isGrocery={false}
-              />
+              <SwipeableRow key={it.id} onDelete={() => remove(it)}>
+                <ItemRow
+                  item={it}
+                  members={members}
+                  memberMap={memberMap}
+                  onToggle={() => toggleChecked(it)}
+                  onAssignee={(id) => setAssignee(it, id)}
+                  onCategory={() => {}}
+                  onDelete={() => remove(it)}
+                  isGrocery={false}
+                />
+              </SwipeableRow>
             ))}
             {active.length === 0 ? (
-              <li className="p-10 text-center text-sm text-ink-300">
+              <div className="p-10 text-center text-sm text-ink-300">
                 Nothing here. Add something above.
-              </li>
+              </div>
             ) : null}
-          </ul>
+          </div>
         )}
       </section>
 
@@ -329,21 +332,22 @@ export function ListDetailView({
               Clear all
             </button>
           </div>
-          <ul className="card flex flex-col divide-y divide-ink-700/6 overflow-hidden opacity-70">
+          <div className="card flex flex-col divide-y divide-ink-700/6 overflow-hidden opacity-70">
             {completed.map((it) => (
-              <ItemRow
-                key={it.id}
-                item={it}
-                members={members}
-                memberMap={memberMap}
-                onToggle={() => toggleChecked(it)}
-                onAssignee={(id) => setAssignee(it, id)}
-                onCategory={(c) => setCategory(it, c)}
-                onDelete={() => remove(it)}
-                isGrocery={list.kind === "grocery"}
-              />
+              <SwipeableRow key={it.id} onDelete={() => remove(it)}>
+                <ItemRow
+                  item={it}
+                  members={members}
+                  memberMap={memberMap}
+                  onToggle={() => toggleChecked(it)}
+                  onAssignee={(id) => setAssignee(it, id)}
+                  onCategory={(c) => setCategory(it, c)}
+                  onDelete={() => remove(it)}
+                  isGrocery={list.kind === "grocery"}
+                />
+              </SwipeableRow>
             ))}
-          </ul>
+          </div>
         </section>
       ) : null}
     </div>
@@ -371,7 +375,7 @@ function ItemRow({
 }) {
   const assignee = item.assignee_id ? memberMap.get(item.assignee_id) : null;
   return (
-    <li className="group flex items-start gap-3 px-3 py-2.5 transition hover:bg-amber-50/40 sm:items-center sm:px-4">
+    <div className="group flex items-start gap-3 px-3 py-2.5 transition hover:bg-amber-50/40 sm:items-center sm:px-4">
       <button
         type="button"
         onClick={onToggle}
@@ -452,6 +456,6 @@ function ItemRow({
       >
         ×
       </button>
-    </li>
+    </div>
   );
 }

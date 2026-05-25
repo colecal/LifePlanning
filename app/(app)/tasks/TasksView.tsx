@@ -6,12 +6,23 @@ import { createClient } from "@/lib/supabase/client";
 import type { Profile } from "@/lib/data";
 import { useConfirm } from "@/app/components/ConfirmDialog";
 import { useToast } from "@/app/components/Toast";
+import { SwipeableRow } from "@/app/components/SwipeableRow";
 import {
+  completeRecurringTaskAction,
   createTaskAction,
   deleteTaskAction,
   updateTaskAction,
 } from "./actions";
 import { TaskDetailModal } from "./TaskDetailModal";
+
+const RRULE_OPTIONS = [
+  { value: "", label: "Does not repeat" },
+  { value: "FREQ=DAILY", label: "Daily" },
+  { value: "FREQ=WEEKLY", label: "Weekly" },
+  { value: "FREQ=WEEKLY;BYDAY=MO,TU,WE,TH,FR", label: "Weekdays" },
+  { value: "FREQ=MONTHLY", label: "Monthly" },
+  { value: "FREQ=YEARLY", label: "Yearly" },
+];
 
 type Task = {
   id: string;
@@ -20,6 +31,7 @@ type Task = {
   due_at: string | null;
   assignee_id: string | null;
   status: string;
+  rrule: string | null;
   created_at: string;
 };
 
@@ -36,6 +48,7 @@ export function TasksView({
   const [title, setTitle] = useState("");
   const [due, setDue] = useState("");
   const [assignee, setAssignee] = useState("");
+  const [rrule, setRrule] = useState("");
   const [pending, startTransition] = useTransition();
   const [openTaskId, setOpenTaskId] = useState<string | null>(null);
   const confirm = useConfirm();
@@ -101,10 +114,12 @@ export function TasksView({
       title: title.trim(),
       due_at: due ? new Date(due).toISOString() : null,
       assignee_id: assignee || null,
+      rrule: rrule || null,
     };
     setTitle("");
     setDue("");
     setAssignee("");
+    setRrule("");
     try {
       await createTaskAction(payload);
     } catch (err) {
@@ -113,6 +128,31 @@ export function TasksView({
   }
 
   function toggle(t: Task) {
+    // Recurring task with a due date → advance to next occurrence instead of marking done
+    if (t.status === "open" && t.rrule && t.due_at) {
+      startTransition(async () => {
+        try {
+          const r = await completeRecurringTaskAction({
+            id: t.id,
+            rrule: t.rrule!,
+            current_due_at: t.due_at!,
+          });
+          if (r.advanced && r.next_due_at) {
+            setTasks((prev) =>
+              prev.map((p) => (p.id === t.id ? { ...p, due_at: r.next_due_at! } : p)),
+            );
+            toast.success("Repeated — next due " + new Date(r.next_due_at).toLocaleDateString());
+          } else {
+            setTasks((prev) =>
+              prev.map((p) => (p.id === t.id ? { ...p, status: "done" } : p)),
+            );
+          }
+        } catch (err) {
+          toast.error(err instanceof Error ? err.message : String(err));
+        }
+      });
+      return;
+    }
     setTasks((prev) =>
       prev.map((p) =>
         p.id === t.id ? { ...p, status: p.status === "open" ? "done" : "open" } : p,
@@ -184,6 +224,16 @@ export function TasksView({
               <option key={m.id} value={m.id}>{m.display_name}</option>
             ))}
           </select>
+          <select
+            value={rrule}
+            onChange={(e) => setRrule(e.target.value)}
+            aria-label="Repeats"
+            className="input-field w-auto flex-shrink-0"
+          >
+            {RRULE_OPTIONS.map((o) => (
+              <option key={o.value} value={o.value}>{o.label}</option>
+            ))}
+          </select>
           <button
             type="submit"
             disabled={pending || !title.trim()}
@@ -198,25 +248,26 @@ export function TasksView({
         <h3 className="mb-2 px-1 text-[10px] font-semibold uppercase tracking-[0.18em] text-amber-700">
           Open · {open.length}
         </h3>
-        <ul className="card flex flex-col divide-y divide-ink-700/6 overflow-hidden">
+        <div className="card flex flex-col divide-y divide-ink-700/6 overflow-hidden">
           {open.map((t) => (
-            <TaskRow
-              key={t.id}
-              task={t}
-              members={members}
-              memberMap={memberMap}
-              onToggle={() => toggle(t)}
-              onAssignee={(id) => setAssigneeFor(t, id)}
-              onDelete={() => remove(t)}
-              onOpen={() => setOpenTaskId(t.id)}
-            />
+            <SwipeableRow key={t.id} onDelete={() => remove(t)}>
+              <TaskRow
+                task={t}
+                members={members}
+                memberMap={memberMap}
+                onToggle={() => toggle(t)}
+                onAssignee={(id) => setAssigneeFor(t, id)}
+                onDelete={() => remove(t)}
+                onOpen={() => setOpenTaskId(t.id)}
+              />
+            </SwipeableRow>
           ))}
           {open.length === 0 ? (
-            <li className="p-12 text-center text-sm text-ink-300">
+            <div className="p-12 text-center text-sm text-ink-300">
               All clear. Nothing on the list.
-            </li>
+            </div>
           ) : null}
-        </ul>
+        </div>
       </section>
 
       {openTaskId
@@ -244,20 +295,21 @@ export function TasksView({
           <h3 className="mb-2 px-1 text-[10px] font-semibold uppercase tracking-[0.18em] text-ink-400">
             Done · {done.length}
           </h3>
-          <ul className="card flex flex-col divide-y divide-ink-700/6 overflow-hidden opacity-70">
+          <div className="card flex flex-col divide-y divide-ink-700/6 overflow-hidden opacity-70">
             {done.map((t) => (
-              <TaskRow
-                key={t.id}
-                task={t}
-                members={members}
-                memberMap={memberMap}
-                onToggle={() => toggle(t)}
-                onAssignee={(id) => setAssigneeFor(t, id)}
-                onDelete={() => remove(t)}
-                onOpen={() => setOpenTaskId(t.id)}
-              />
+              <SwipeableRow key={t.id} onDelete={() => remove(t)}>
+                <TaskRow
+                  task={t}
+                  members={members}
+                  memberMap={memberMap}
+                  onToggle={() => toggle(t)}
+                  onAssignee={(id) => setAssigneeFor(t, id)}
+                  onDelete={() => remove(t)}
+                  onOpen={() => setOpenTaskId(t.id)}
+                />
+              </SwipeableRow>
             ))}
-          </ul>
+          </div>
         </section>
       ) : null}
     </div>
@@ -287,7 +339,7 @@ function TaskRow({
   const overdue = due && !isDone && isPast(due);
 
   return (
-    <li className="group flex items-start gap-3 px-3 py-2.5 transition hover:bg-amber-50/40 sm:items-center sm:px-4">
+    <div className="group flex items-start gap-3 px-3 py-2.5 transition hover:bg-amber-50/40 sm:items-center sm:px-4">
       <button
         type="button"
         onClick={onToggle}
@@ -317,11 +369,25 @@ function TaskRow({
         <button
           type="button"
           onClick={onOpen}
-          className={`min-w-0 flex-1 truncate text-left text-[15px] sm:text-sm ${
+          className={`flex min-w-0 flex-1 items-center gap-1.5 text-left text-[15px] sm:text-sm ${
             isDone ? "text-ink-300 line-through" : "font-medium text-ink-800 hover:text-amber-700"
           }`}
         >
-          {task.title}
+          <span className="truncate">{task.title}</span>
+          {task.rrule ? (
+            <span title="Repeats" className="shrink-0 text-amber-600">
+              <svg viewBox="0 0 12 12" className="h-3 w-3" aria-hidden>
+                <path
+                  d="M3 4a3 3 0 0 1 3-3h2M9 8a3 3 0 0 1-3 3H4M2 2v3h3M10 10V7H7"
+                  stroke="currentColor"
+                  strokeWidth="1.4"
+                  strokeLinecap="round"
+                  strokeLinejoin="round"
+                  fill="none"
+                />
+              </svg>
+            </span>
+          ) : null}
         </button>
 
         <div className="flex flex-wrap items-center gap-2">
@@ -364,7 +430,7 @@ function TaskRow({
       >
         ×
       </button>
-    </li>
+    </div>
   );
 }
 
