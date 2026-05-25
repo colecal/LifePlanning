@@ -32,20 +32,28 @@ export async function saveEventAction(input: EventInput) {
     household_id: householdId,
   };
 
+  let result;
   if (input.id) {
-    const { error } = await supabase
+    const { data, error } = await supabase
       .from("events")
       .update(payload)
-      .eq("id", input.id);
+      .eq("id", input.id)
+      .select("id, title, description, location, starts_at, ends_at, all_day, rrule, owner_id")
+      .single();
     if (error) throw new Error(error.message);
+    result = data;
   } else {
-    const { error } = await supabase
+    const { data, error } = await supabase
       .from("events")
-      .insert({ ...payload, created_by: userId });
+      .insert({ ...payload, created_by: userId })
+      .select("id, title, description, location, starts_at, ends_at, all_day, rrule, owner_id")
+      .single();
     if (error) throw new Error(error.message);
+    result = data;
   }
 
   revalidatePath("/calendar");
+  return result;
 }
 
 export async function deleteEventAction(id: string) {

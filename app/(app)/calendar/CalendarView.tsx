@@ -88,7 +88,7 @@ export function CalendarView({
   currentUserId: string;
 }) {
   const [events, setEvents] = useState<DbEvent[]>(initialEvents);
-  const [view, setView] = useState<"month" | "agenda">("month");
+  const [view, setView] = useState<"month" | "week" | "agenda">("month");
   const [cursor, setCursor] = useState<Date>(startOfMonth(new Date()));
   const [activeOwners, setActiveOwners] = useState<Set<string>>(
     new Set(members.map((m) => m.id)),
@@ -143,8 +143,18 @@ export function CalendarView({
     [events, activeOwners],
   );
 
-  const rangeStart = view === "month" ? startOfWeek(startOfMonth(cursor)) : startOfDay(cursor);
-  const rangeEnd = view === "month" ? endOfWeek(endOfMonth(cursor)) : addDays(rangeStart, 30);
+  const rangeStart =
+    view === "month"
+      ? startOfWeek(startOfMonth(cursor))
+      : view === "week"
+        ? startOfWeek(cursor)
+        : startOfDay(cursor);
+  const rangeEnd =
+    view === "month"
+      ? endOfWeek(endOfMonth(cursor))
+      : view === "week"
+        ? endOfWeek(cursor)
+        : addDays(rangeStart, 30);
 
   const occurrences = useMemo(() => {
     const out: Occurrence[] = [];
@@ -211,26 +221,19 @@ export function CalendarView({
           </div>
 
           <div className="card flex p-1 text-sm">
-            <button
-              onClick={() => setView("month")}
-              className={`rounded-lg px-3 py-1.5 transition sm:py-1 ${
-                view === "month"
-                  ? "bg-amber-gradient text-ink-900 shadow-soft"
-                  : "text-ink-500 hover:text-ink-900"
-              }`}
-            >
-              Month
-            </button>
-            <button
-              onClick={() => setView("agenda")}
-              className={`rounded-lg px-3 py-1.5 transition sm:py-1 ${
-                view === "agenda"
-                  ? "bg-amber-gradient text-ink-900 shadow-soft"
-                  : "text-ink-500 hover:text-ink-900"
-              }`}
-            >
-              Agenda
-            </button>
+            {(["month", "week", "agenda"] as const).map((v) => (
+              <button
+                key={v}
+                onClick={() => setView(v)}
+                className={`rounded-lg px-3 py-1.5 capitalize transition sm:py-1 ${
+                  view === v
+                    ? "bg-amber-gradient text-ink-900 shadow-soft"
+                    : "text-ink-500 hover:text-ink-900"
+                }`}
+              >
+                {v}
+              </button>
+            ))}
           </div>
 
           <button
@@ -278,6 +281,14 @@ export function CalendarView({
           onDayClick={(d) => setModal({ mode: "create", defaultDate: d })}
           onEventClick={(ev) => setModal({ mode: "edit", event: ev })}
         />
+      ) : view === "week" ? (
+        <WeekView
+          rangeStart={rangeStart}
+          occurrences={occurrences}
+          memberMap={memberMap}
+          onDayClick={(d) => setModal({ mode: "create", defaultDate: d })}
+          onEventClick={(ev) => setModal({ mode: "edit", event: ev })}
+        />
       ) : (
         <AgendaList
           occurrences={occurrences}
@@ -293,6 +304,17 @@ export function CalendarView({
           defaultDate={modal.mode === "create" ? modal.defaultDate : null}
           members={members}
           currentUserId={currentUserId}
+          onSaved={(row) => {
+            setEvents((prev) => {
+              if (prev.find((p) => p.id === row.id)) {
+                return prev.map((p) => (p.id === row.id ? row : p));
+              }
+              return [...prev, row];
+            });
+          }}
+          onDeleted={(id) => {
+            setEvents((prev) => prev.filter((p) => p.id !== id));
+          }}
           onClose={() => setModal(null)}
         />
       ) : null}
@@ -397,6 +419,7 @@ function MonthGrid({
                 {dayEvents.slice(0, 3).map((e, idx) => {
                   const owner = e.owner_id ? memberMap.get(e.owner_id) : null;
                   const color = owner?.color ?? "#9A5B0C";
+                  const isContinuation = !isSameDay(day, e.occurrence_start);
                   return (
                     <li
                       key={`${e.id}-${idx}`}
@@ -404,14 +427,22 @@ function MonthGrid({
                         ev.stopPropagation();
                         onEventClick(e);
                       }}
-                      className="truncate rounded-md px-1.5 py-0.5 text-[11px] font-medium text-ink-900 backdrop-blur transition hover:brightness-95"
+                      className={`truncate px-1.5 py-0.5 text-[11px] font-medium text-ink-900 backdrop-blur transition hover:brightness-95 ${
+                        isContinuation
+                          ? "rounded-r-md opacity-80"
+                          : "rounded-md"
+                      }`}
                       style={{
                         background: `linear-gradient(135deg, ${color}33, ${color}55)`,
-                        borderLeft: `2px solid ${color}`,
+                        borderLeft: isContinuation ? "none" : `2px solid ${color}`,
                       }}
                       title={e.title}
                     >
-                      {!e.all_day ? format(e.occurrence_start, "h:mma ").toLowerCase() : ""}
+                      {isContinuation ? (
+                        <span className="opacity-60">↳ </span>
+                      ) : !e.all_day ? (
+                        format(e.occurrence_start, "h:mma ").toLowerCase()
+                      ) : null}
                       {e.title}
                     </li>
                   );
@@ -421,6 +452,90 @@ function MonthGrid({
                     +{dayEvents.length - 3} more
                   </li>
                 ) : null}
+              </ul>
+            </div>
+          );
+        })}
+      </div>
+    </div>
+  );
+}
+
+function WeekView({
+  rangeStart,
+  occurrences,
+  memberMap,
+  onDayClick,
+  onEventClick,
+}: {
+  rangeStart: Date;
+  occurrences: Occurrence[];
+  memberMap: Map<string, Profile>;
+  onDayClick: (d: Date) => void;
+  onEventClick: (e: Occurrence) => void;
+}) {
+  const days = Array.from({ length: 7 }, (_, i) => addDays(rangeStart, i));
+  const today = startOfDay(new Date());
+
+  return (
+    <div className="card overflow-hidden">
+      <div className="grid grid-cols-7">
+        {days.map((day, i) => {
+          const isToday = isSameDay(day, today);
+          const dayEvents = occurrences.filter(
+            (o) =>
+              isSameDay(day, o.occurrence_start) ||
+              (day >= startOfDay(o.occurrence_start) && day <= o.occurrence_end),
+          );
+
+          return (
+            <div
+              key={i}
+              onClick={() => onDayClick(day)}
+              className={`group min-h-[18rem] cursor-pointer border-r border-ink-700/6 p-2 last:border-r-0 transition hover:bg-amber-50/40`}
+            >
+              <div className="mb-2 flex flex-col items-center">
+                <span className="text-[10px] font-semibold uppercase tracking-[0.16em] text-ink-400">
+                  {format(day, "EEE")}
+                </span>
+                <span
+                  className={`mt-1 inline-flex h-7 w-7 items-center justify-center rounded-full text-sm font-medium ${
+                    isToday
+                      ? "bg-amber-gradient text-ink-900 shadow-soft"
+                      : "text-ink-700"
+                  }`}
+                >
+                  {format(day, "d")}
+                </span>
+              </div>
+              <ul className="flex flex-col gap-1">
+                {dayEvents.map((e, idx) => {
+                  const owner = e.owner_id ? memberMap.get(e.owner_id) : null;
+                  const color = owner?.color ?? "#9A5B0C";
+                  const isContinuation = !isSameDay(day, e.occurrence_start);
+                  return (
+                    <li
+                      key={`${e.id}-${idx}`}
+                      onClick={(ev) => {
+                        ev.stopPropagation();
+                        onEventClick(e);
+                      }}
+                      className="truncate rounded-md px-1.5 py-1 text-[11px] font-medium text-ink-900 transition hover:brightness-95"
+                      style={{
+                        background: `linear-gradient(135deg, ${color}33, ${color}55)`,
+                        borderLeft: `2px solid ${color}`,
+                      }}
+                      title={e.title}
+                    >
+                      {isContinuation ? (
+                        <span className="opacity-60">↳ </span>
+                      ) : !e.all_day ? (
+                        format(e.occurrence_start, "h:mma ").toLowerCase()
+                      ) : null}
+                      {e.title}
+                    </li>
+                  );
+                })}
               </ul>
             </div>
           );
@@ -522,6 +637,8 @@ function EventModal({
   members,
   currentUserId,
   onClose,
+  onSaved,
+  onDeleted,
 }: {
   mode: "create" | "edit";
   event: DbEvent | null;
@@ -529,6 +646,8 @@ function EventModal({
   members: Profile[];
   currentUserId: string;
   onClose: () => void;
+  onSaved: (row: DbEvent) => void;
+  onDeleted: (id: string) => void;
 }) {
   const initialStart = event
     ? new Date(event.starts_at)
@@ -563,7 +682,7 @@ function EventModal({
     }
     startTransition(async () => {
       try {
-        await saveEventAction({
+        const saved = await saveEventAction({
           id: event?.id,
           title,
           description,
@@ -574,6 +693,7 @@ function EventModal({
           rrule: rrule || null,
           owner_id: ownerId || null,
         });
+        if (saved) onSaved(saved);
         toast.success(event ? "Event updated" : "Event added");
         onClose();
       } catch (err) {
@@ -594,6 +714,7 @@ function EventModal({
     startTransition(async () => {
       try {
         await deleteEventAction(event.id);
+        onDeleted(event.id);
         toast.success("Event deleted");
         onClose();
       } catch (err) {
