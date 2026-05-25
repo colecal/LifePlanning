@@ -112,20 +112,43 @@ export function AccountSection({
           </div>
         </div>
 
-        <label className="flex items-start gap-3">
-          <input
-            type="checkbox"
-            checked={digest}
-            onChange={(e) => setDigest(e.target.checked)}
-            className="mt-1 h-4 w-4 accent-amber-500"
-          />
-          <span className="text-sm text-ink-700">
-            Send me a daily agenda email
-            <span className="block text-xs text-ink-400">
-              When the digest feature is enabled.
+        <div className="flex flex-col gap-2 rounded-xl border border-ink-700/8 bg-cream-50/40 p-3">
+          <label className="flex items-start gap-3">
+            <input
+              type="checkbox"
+              checked={digest}
+              onChange={(e) => setDigest(e.target.checked)}
+              className="mt-1 h-4 w-4 accent-amber-500"
+            />
+            <span className="text-sm text-ink-700">
+              Daily digest push at 6am Central
+              <span className="block text-xs text-ink-400">
+                A morning summary: today&apos;s events, your due tasks, what your partner
+                has open. Requires notifications enabled below.
+              </span>
             </span>
-          </span>
-        </label>
+          </label>
+          <button
+            type="button"
+            onClick={async () => {
+              try {
+                const r = await fetch("/api/digest/test", { method: "POST" });
+                const j = await r.json().catch(() => ({}));
+                if (!r.ok) throw new Error(j?.error ?? "Failed");
+                if (j.sent === 0) {
+                  toast.error("No push sent — enable notifications first.");
+                } else {
+                  toast.success("Digest sent");
+                }
+              } catch (err) {
+                toast.error(err instanceof Error ? err.message : String(err));
+              }
+            }}
+            className="btn-ghost self-start text-xs"
+          >
+            Send me one now
+          </button>
+        </div>
 
         <div className="flex flex-wrap items-center justify-between gap-3 pt-2">
           <button
