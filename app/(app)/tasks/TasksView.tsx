@@ -205,19 +205,19 @@ export function TasksView({
           placeholder="New task…"
           className="w-full min-w-0 bg-transparent px-3 py-2.5 text-base text-ink-900 placeholder:text-ink-300 focus:outline-none sm:text-sm"
         />
+        <input
+          type="datetime-local"
+          value={due}
+          onChange={(e) => setDue(e.target.value)}
+          aria-label="Due date"
+          className="input-field w-full"
+        />
         <div className="flex gap-2">
-          <input
-            type="datetime-local"
-            value={due}
-            onChange={(e) => setDue(e.target.value)}
-            aria-label="Due date"
-            className="input-field min-w-0 flex-1"
-          />
           <select
             value={assignee}
             onChange={(e) => setAssignee(e.target.value)}
             aria-label="Assignee"
-            className="input-field w-auto flex-shrink-0"
+            className="input-field min-w-0 flex-1"
           >
             <option value="">Anyone</option>
             {members.map((m) => (
@@ -228,7 +228,7 @@ export function TasksView({
             value={rrule}
             onChange={(e) => setRrule(e.target.value)}
             aria-label="Repeats"
-            className="input-field w-auto flex-shrink-0"
+            className="input-field min-w-0 flex-1"
           >
             {RRULE_OPTIONS.map((o) => (
               <option key={o.value} value={o.value}>{o.label}</option>
@@ -343,20 +343,24 @@ function TaskRow({
     <div className="group flex items-start gap-3 px-3 py-2.5 transition hover:bg-amber-50/40 sm:items-center sm:px-4">
       <button
         type="button"
-        onClick={onToggle}
-        className={`mt-0.5 grid h-6 w-6 shrink-0 place-items-center rounded-md border transition sm:mt-0 sm:h-5 sm:w-5 ${
+        onClick={(e) => {
+          e.stopPropagation();
+          onToggle();
+        }}
+        className={`grid h-7 w-7 shrink-0 place-items-center rounded-full border-2 transition active:scale-90 sm:h-6 sm:w-6 ${
           isDone
             ? "border-amber-500 bg-amber-gradient"
-            : "border-ink-200 bg-cream-50/40 hover:border-amber-400"
+            : "border-ink-300 bg-transparent hover:border-amber-500"
         }`}
         aria-label={isDone ? "Mark open" : "Mark done"}
+        title={isDone ? "Mark open" : "Mark done"}
       >
         {isDone ? (
-          <svg viewBox="0 0 12 12" className="h-3 w-3 text-ink-900">
+          <svg viewBox="0 0 12 12" className="h-3.5 w-3.5 text-ink-900">
             <path
               d="M2 6.5l2.5 2.5L10 3.5"
               stroke="currentColor"
-              strokeWidth="2"
+              strokeWidth="2.5"
               strokeLinecap="round"
               strokeLinejoin="round"
               fill="none"

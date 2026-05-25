@@ -233,13 +233,13 @@ export function ListDetailView({
           placeholder={list.kind === "grocery" ? "Add an item…" : "Add to list…"}
           className="w-full min-w-0 bg-transparent px-3 py-2.5 text-base text-ink-900 placeholder:text-ink-300 focus:outline-none sm:text-sm"
         />
-        <div className="flex flex-wrap gap-2">
+        <div className="flex gap-2">
           {list.kind === "grocery" ? (
             <select
               value={newCategory}
               onChange={(e) => setNewCategory(e.target.value)}
               aria-label="Category"
-              className="input-field min-w-0 flex-1 sm:w-auto sm:flex-none"
+              className="input-field min-w-0 flex-1"
             >
               <option value="">Category</option>
               {GROCERY_CATEGORIES.map((c) => (
@@ -251,7 +251,7 @@ export function ListDetailView({
             value={newAssignee}
             onChange={(e) => setNewAssignee(e.target.value)}
             aria-label="Assignee"
-            className="input-field min-w-0 flex-1 sm:w-auto sm:flex-none"
+            className="input-field min-w-0 flex-1"
           >
             <option value="">Anyone</option>
             {members.map((m) => (
@@ -379,20 +379,23 @@ function ItemRow({
     <div className="group flex items-start gap-3 px-3 py-2.5 transition hover:bg-amber-50/40 sm:items-center sm:px-4">
       <button
         type="button"
-        onClick={onToggle}
-        className={`mt-0.5 grid h-6 w-6 shrink-0 place-items-center rounded-md border transition sm:mt-0 sm:h-5 sm:w-5 ${
+        onClick={(e) => {
+          e.stopPropagation();
+          onToggle();
+        }}
+        className={`grid h-7 w-7 shrink-0 place-items-center rounded-full border-2 transition active:scale-90 sm:h-6 sm:w-6 ${
           item.checked
             ? "border-amber-500 bg-amber-gradient"
-            : "border-ink-200 bg-cream-50/40 hover:border-amber-400"
+            : "border-ink-300 bg-transparent hover:border-amber-500"
         }`}
         aria-label={item.checked ? "Uncheck" : "Check"}
       >
         {item.checked ? (
-          <svg viewBox="0 0 12 12" className="h-3 w-3 text-ink-900">
+          <svg viewBox="0 0 12 12" className="h-3.5 w-3.5 text-ink-900">
             <path
               d="M2 6.5l2.5 2.5L10 3.5"
               stroke="currentColor"
-              strokeWidth="2"
+              strokeWidth="2.5"
               strokeLinecap="round"
               strokeLinejoin="round"
               fill="none"

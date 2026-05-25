@@ -17,7 +17,7 @@ export default async function AppLayout({
         signOutAction={signOutAction}
       />
 
-      <main className="mx-auto w-full max-w-6xl flex-1 px-4 py-6 sm:px-5 sm:py-8 animate-fade-in">
+      <main className="mx-auto w-full max-w-6xl flex-1 px-4 py-6 pb-[calc(5rem+env(safe-area-inset-bottom))] sm:px-5 sm:py-8 sm:pb-8 animate-fade-in">
         {children}
       </main>
 
