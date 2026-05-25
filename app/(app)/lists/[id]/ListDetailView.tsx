@@ -3,6 +3,8 @@
 import { useEffect, useMemo, useState, useTransition } from "react";
 import { createClient } from "@/lib/supabase/client";
 import type { Profile } from "@/lib/data";
+import { useConfirm } from "@/app/components/ConfirmDialog";
+import { useToast } from "@/app/components/Toast";
 import {
   addItemAction,
   clearCheckedAction,
@@ -46,6 +48,8 @@ export function ListDetailView({
   const [newCategory, setNewCategory] = useState<string>("");
   const [newAssignee, setNewAssignee] = useState<string>("");
   const [pending, startTransition] = useTransition();
+  const confirm = useConfirm();
+  const toast = useToast();
 
   useEffect(() => {
     const supabase = createClient();
@@ -133,7 +137,7 @@ export function ListDetailView({
       setItems((prev) => prev.filter((p) => p.id !== tempId));
     } catch (err) {
       setItems((prev) => prev.filter((p) => p.id !== tempId));
-      alert(err instanceof Error ? err.message : String(err));
+      toast.error(err instanceof Error ? err.message : String(err));
     }
   }
 
@@ -145,7 +149,7 @@ export function ListDetailView({
       try {
         await updateItemAction({ id: item.id, checked: !item.checked });
       } catch (err) {
-        alert(err instanceof Error ? err.message : String(err));
+        toast.error(err instanceof Error ? err.message : String(err));
       }
     });
   }
@@ -174,14 +178,19 @@ export function ListDetailView({
       try {
         await deleteItemAction(item.id);
       } catch (err) {
-        alert(err instanceof Error ? err.message : String(err));
+        toast.error(err instanceof Error ? err.message : String(err));
       }
     });
   }
 
-  function clearCompleted() {
+  async function clearCompleted() {
     if (completed.length === 0) return;
-    if (!confirm(`Clear ${completed.length} completed item${completed.length === 1 ? "" : "s"}?`)) return;
+    const ok = await confirm({
+      title: `Clear ${completed.length} completed item${completed.length === 1 ? "" : "s"}?`,
+      destructive: true,
+      confirmLabel: "Clear",
+    });
+    if (!ok) return;
     setItems((prev) => prev.filter((p) => !p.checked));
     startTransition(async () => {
       await clearCheckedAction(list.id);
@@ -199,18 +208,21 @@ export function ListDetailView({
             {list.kind}
           </p>
         </div>
-        <form action={async () => {
-          if (confirm(`Delete the list "${list.name}" and all its items?`)) {
-            await deleteListAction(list.id);
-          }
-        }}>
-          <button
-            type="submit"
-            className="text-xs font-medium text-ink-400 transition hover:text-red-600"
-          >
-            Delete list
-          </button>
-        </form>
+        <button
+          type="button"
+          onClick={async () => {
+            const ok = await confirm({
+              title: `Delete "${list.name}"?`,
+              message: "This deletes the list and all its items.",
+              destructive: true,
+              confirmLabel: "Delete",
+            });
+            if (ok) await deleteListAction(list.id);
+          }}
+          className="text-xs font-medium text-ink-400 transition hover:text-red-600"
+        >
+          Delete list
+        </button>
       </div>
 
       <form onSubmit={addItem} className="card flex flex-col gap-2 p-2.5">

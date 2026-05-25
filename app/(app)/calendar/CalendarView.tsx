@@ -18,6 +18,8 @@ import { rrulestr } from "rrule";
 import { createClient } from "@/lib/supabase/client";
 import type { Profile } from "@/lib/data";
 import { CommentThread } from "@/app/components/CommentThread";
+import { useConfirm } from "@/app/components/ConfirmDialog";
+import { useToast } from "@/app/components/Toast";
 import { deleteEventAction, saveEventAction } from "./actions";
 
 type DbEvent = {
@@ -547,14 +549,20 @@ function EventModal({
   const [rrule, setRrule] = useState(event?.rrule ?? "");
   const [pending, startTransition] = useTransition();
   const [error, setError] = useState<string | null>(null);
+  const confirmDialog = useConfirm();
+  const toast = useToast();
 
   function submit(e: React.FormEvent) {
     e.preventDefault();
     setError(null);
+    const startDate = fromLocalInput(startsAt, allDay);
+    const endDate = fromLocalInput(endsAt, allDay);
+    if (endDate <= startDate) {
+      setError("End time must be after start time.");
+      return;
+    }
     startTransition(async () => {
       try {
-        const startDate = fromLocalInput(startsAt, allDay);
-        const endDate = fromLocalInput(endsAt, allDay);
         await saveEventAction({
           id: event?.id,
           title,
@@ -566,6 +574,7 @@ function EventModal({
           rrule: rrule || null,
           owner_id: ownerId || null,
         });
+        toast.success(event ? "Event updated" : "Event added");
         onClose();
       } catch (err) {
         setError(err instanceof Error ? err.message : String(err));
@@ -573,12 +582,19 @@ function EventModal({
     });
   }
 
-  function remove() {
+  async function remove() {
     if (!event) return;
-    if (!confirm("Delete this event?")) return;
+    const ok = await confirmDialog({
+      title: "Delete this event?",
+      message: event.title,
+      destructive: true,
+      confirmLabel: "Delete",
+    });
+    if (!ok) return;
     startTransition(async () => {
       try {
         await deleteEventAction(event.id);
+        toast.success("Event deleted");
         onClose();
       } catch (err) {
         setError(err instanceof Error ? err.message : String(err));

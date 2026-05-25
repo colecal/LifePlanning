@@ -2,8 +2,12 @@
 
 import { useEffect, useMemo, useRef, useState, useTransition } from "react";
 import { formatDistanceToNow } from "date-fns";
+import ReactMarkdown from "react-markdown";
+import remarkGfm from "remark-gfm";
 import { createClient } from "@/lib/supabase/client";
 import type { Profile } from "@/lib/data";
+import { useConfirm } from "@/app/components/ConfirmDialog";
+import { useToast } from "@/app/components/Toast";
 import { createNoteAction, deleteNoteAction, saveNoteAction } from "./actions";
 
 type Note = {
@@ -26,6 +30,7 @@ export function NotesView({
     initialNotes[0]?.id ?? null,
   );
   const [pending, startTransition] = useTransition();
+  const confirm = useConfirm();
 
   useEffect(() => {
     const supabase = createClient();
@@ -76,8 +81,14 @@ export function NotesView({
     });
   }
 
-  function removeNote(id: string) {
-    if (!confirm("Delete this note?")) return;
+  async function removeNote(id: string) {
+    const ok = await confirm({
+      title: "Delete this note?",
+      message: "This cannot be undone.",
+      destructive: true,
+      confirmLabel: "Delete",
+    });
+    if (!ok) return;
     startTransition(async () => {
       await deleteNoteAction(id);
       if (selectedId === id) setSelectedId(null);
@@ -179,6 +190,7 @@ function NoteEditor({
   const [title, setTitle] = useState(note.title ?? "");
   const [body, setBody] = useState(note.body ?? "");
   const [status, setStatus] = useState<"idle" | "saving" | "saved">("idle");
+  const [mode, setMode] = useState<"write" | "preview">("write");
   const lastSavedRef = useRef({ title: note.title ?? "", body: note.body ?? "" });
 
   useEffect(() => {
@@ -225,25 +237,57 @@ function NoteEditor({
           </button>
         </div>
       </div>
-      <p className="text-xs text-ink-400">
-        Last edited{" "}
-        {formatDistanceToNow(new Date(note.updated_at), { addSuffix: true })}
-        {updatedBy ? (
-          <>
-            {" "}by{" "}
-            <span style={{ color: updatedBy.color }} className="font-medium">
-              {updatedBy.display_name}
-            </span>
-          </>
-        ) : null}
-      </p>
-      <textarea
-        value={body}
-        onChange={(e) => setBody(e.target.value)}
-        placeholder="Write…"
-        rows={20}
-        className="min-h-[26rem] resize-y rounded-xl border border-ink-700/8 bg-cream-50/40 p-4 font-mono text-sm leading-relaxed text-ink-800 outline-none transition placeholder:text-ink-300 focus:border-amber-400 focus:bg-cream-50/70"
-      />
+      <div className="flex items-center justify-between gap-2">
+        <p className="text-xs text-ink-400">
+          Last edited{" "}
+          {formatDistanceToNow(new Date(note.updated_at), { addSuffix: true })}
+          {updatedBy ? (
+            <>
+              {" "}by{" "}
+              <span style={{ color: updatedBy.color }} className="font-medium">
+                {updatedBy.display_name}
+              </span>
+            </>
+          ) : null}
+        </p>
+        <div className="flex rounded-lg border border-ink-700/8 bg-cream-50/40 p-0.5 text-xs">
+          <button
+            type="button"
+            onClick={() => setMode("write")}
+            className={`rounded-md px-2.5 py-1 transition ${
+              mode === "write" ? "bg-amber-gradient text-ink-900" : "text-ink-500"
+            }`}
+          >
+            Write
+          </button>
+          <button
+            type="button"
+            onClick={() => setMode("preview")}
+            className={`rounded-md px-2.5 py-1 transition ${
+              mode === "preview" ? "bg-amber-gradient text-ink-900" : "text-ink-500"
+            }`}
+          >
+            Preview
+          </button>
+        </div>
+      </div>
+      {mode === "write" ? (
+        <textarea
+          value={body}
+          onChange={(e) => setBody(e.target.value)}
+          placeholder="Write… markdown supported."
+          rows={20}
+          className="min-h-[26rem] resize-y rounded-xl border border-ink-700/8 bg-cream-50/40 p-4 font-mono text-sm leading-relaxed text-ink-800 outline-none transition placeholder:text-ink-300 focus:border-amber-400 focus:bg-cream-50/70"
+        />
+      ) : (
+        <div className="prose-mvl min-h-[26rem] rounded-xl border border-ink-700/8 bg-cream-50/40 p-4">
+          {body.trim() ? (
+            <ReactMarkdown remarkPlugins={[remarkGfm]}>{body}</ReactMarkdown>
+          ) : (
+            <p className="text-sm text-ink-300">Nothing to preview yet.</p>
+          )}
+        </div>
+      )}
     </div>
   );
 }

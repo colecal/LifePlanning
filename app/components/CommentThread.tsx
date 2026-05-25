@@ -4,6 +4,7 @@ import { useEffect, useMemo, useState, useTransition } from "react";
 import { formatDistanceToNow } from "date-fns";
 import { createClient } from "@/lib/supabase/client";
 import type { Profile } from "@/lib/data";
+import { useToast } from "@/app/components/Toast";
 import { postCommentAction, deleteCommentAction } from "./commentActions";
 
 type Comment = {
@@ -27,6 +28,7 @@ export function CommentThread({
   const [comments, setComments] = useState<Comment[]>([]);
   const [draft, setDraft] = useState("");
   const [pending, startTransition] = useTransition();
+  const toast = useToast();
 
   useEffect(() => {
     const supabase = createClient();
@@ -59,6 +61,10 @@ export function CommentThread({
             setComments((prev) =>
               prev.find((c) => c.id === row.id) ? prev : [...prev, row],
             );
+          } else if (payload.eventType === "UPDATE") {
+            const row = payload.new as Comment & { entity_type: string };
+            if (row.entity_type !== entityType) return;
+            setComments((prev) => prev.map((c) => (c.id === row.id ? row : c)));
           } else if (payload.eventType === "DELETE") {
             const row = payload.old as { id?: string };
             setComments((prev) => prev.filter((c) => c.id !== row.id));
@@ -87,7 +93,7 @@ export function CommentThread({
     try {
       await postCommentAction({ entityType, entityId, body });
     } catch (err) {
-      alert(err instanceof Error ? err.message : String(err));
+      toast.error(err instanceof Error ? err.message : String(err));
     }
   }
 

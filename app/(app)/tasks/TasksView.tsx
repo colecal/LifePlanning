@@ -4,6 +4,8 @@ import { useEffect, useMemo, useState, useTransition } from "react";
 import { format, isPast, isToday, isTomorrow } from "date-fns";
 import { createClient } from "@/lib/supabase/client";
 import type { Profile } from "@/lib/data";
+import { useConfirm } from "@/app/components/ConfirmDialog";
+import { useToast } from "@/app/components/Toast";
 import {
   createTaskAction,
   deleteTaskAction,
@@ -36,6 +38,8 @@ export function TasksView({
   const [assignee, setAssignee] = useState("");
   const [pending, startTransition] = useTransition();
   const [openTaskId, setOpenTaskId] = useState<string | null>(null);
+  const confirm = useConfirm();
+  const toast = useToast();
 
   useEffect(() => {
     const supabase = createClient();
@@ -104,7 +108,7 @@ export function TasksView({
     try {
       await createTaskAction(payload);
     } catch (err) {
-      alert(err instanceof Error ? err.message : String(err));
+      toast.error(err instanceof Error ? err.message : String(err));
     }
   }
 
@@ -129,8 +133,14 @@ export function TasksView({
     });
   }
 
-  function remove(t: Task) {
-    if (!confirm("Delete this task?")) return;
+  async function remove(t: Task) {
+    const ok = await confirm({
+      title: "Delete this task?",
+      message: t.title,
+      destructive: true,
+      confirmLabel: "Delete",
+    });
+    if (!ok) return;
     setTasks((prev) => prev.filter((p) => p.id !== t.id));
     startTransition(async () => {
       await deleteTaskAction(t.id);

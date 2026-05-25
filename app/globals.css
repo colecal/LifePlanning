@@ -422,6 +422,58 @@ button:focus-visible, a:focus-visible, input:focus-visible, select:focus-visible
    Animations
 ---------------------------------------------------------------------------- */
 
+/* ----------------------------------------------------------------------------
+   Markdown prose (notes preview)
+---------------------------------------------------------------------------- */
+
+.prose-mvl {
+  color: var(--ink-800);
+  font-size: 0.9375rem;
+  line-height: 1.6;
+}
+.prose-mvl h1 { font-size: 1.5rem; font-weight: 600; color: var(--ink-900); margin: 1.25rem 0 0.5rem; }
+.prose-mvl h2 { font-size: 1.25rem; font-weight: 600; color: var(--ink-900); margin: 1.25rem 0 0.5rem; }
+.prose-mvl h3 { font-size: 1.0625rem; font-weight: 600; color: var(--ink-900); margin: 1rem 0 0.375rem; }
+.prose-mvl p { margin: 0.5rem 0; }
+.prose-mvl a { color: var(--amber-700); text-decoration: underline; text-underline-offset: 2px; }
+.prose-mvl strong { color: var(--ink-900); font-weight: 600; }
+.prose-mvl ul, .prose-mvl ol { margin: 0.5rem 0; padding-left: 1.5rem; }
+.prose-mvl ul { list-style: disc; }
+.prose-mvl ol { list-style: decimal; }
+.prose-mvl li { margin: 0.125rem 0; }
+.prose-mvl code {
+  background: var(--surface-glass-bg-strong);
+  padding: 0.1rem 0.35rem;
+  border-radius: 0.375rem;
+  font-family: var(--font-geist-mono), monospace;
+  font-size: 0.85em;
+  color: var(--amber-700);
+}
+.prose-mvl pre {
+  background: var(--surface-glass-bg-strong);
+  border: 1px solid var(--surface-glass-border);
+  border-radius: 0.625rem;
+  padding: 0.875rem 1rem;
+  overflow-x: auto;
+  margin: 0.75rem 0;
+}
+.prose-mvl pre code {
+  background: transparent;
+  padding: 0;
+  color: var(--ink-700);
+}
+.prose-mvl blockquote {
+  border-left: 3px solid var(--amber-400);
+  padding-left: 0.875rem;
+  color: var(--ink-500);
+  margin: 0.75rem 0;
+}
+.prose-mvl hr { border: 0; border-top: 1px solid var(--surface-glass-border); margin: 1rem 0; }
+.prose-mvl table { border-collapse: collapse; margin: 0.5rem 0; }
+.prose-mvl th, .prose-mvl td { border: 1px solid var(--surface-glass-border); padding: 0.375rem 0.625rem; text-align: left; }
+.prose-mvl th { background: var(--surface-glass-bg-strong); font-weight: 600; color: var(--ink-900); }
+.prose-mvl input[type="checkbox"] { accent-color: var(--amber-500); margin-right: 0.4rem; }
+
 @keyframes fade-in {
   from { opacity: 0; transform: translateY(4px); }
   to   { opacity: 1; transform: translateY(0); }
