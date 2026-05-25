@@ -280,7 +280,7 @@ body::after {
 input, textarea, select, button { font-family: inherit; }
 
 input[type="text"], input[type="email"], input[type="password"],
-input[type="date"], input[type="datetime-local"], input[type="search"],
+input[type="date"], input[type="datetime-local"], input[type="time"], input[type="search"],
 textarea, select {
   color: var(--ink-700);
   /* iOS Safari zooms inputs <16px on focus; lock to 16 on small screens */
@@ -288,10 +288,41 @@ textarea, select {
 }
 @media (min-width: 640px) {
   input[type="text"], input[type="email"], input[type="password"],
-  input[type="date"], input[type="datetime-local"], input[type="search"],
+  input[type="date"], input[type="datetime-local"], input[type="time"], input[type="search"],
   textarea, select {
     font-size: 14px;
   }
+}
+
+/* iOS Safari gives date/time inputs a baked-in minimum width based on the
+   native control chrome (calendar icon + spinners), which bypasses CSS
+   width:100%. Stripping the native appearance lets our .input-field width
+   actually apply. The native picker still opens on focus/tap. */
+input[type="date"],
+input[type="datetime-local"],
+input[type="time"] {
+  -webkit-appearance: none;
+  appearance: none;
+  min-width: 0;
+  max-width: 100%;
+  box-sizing: border-box;
+}
+
+/* Hide the default WebKit calendar icon — it duplicates with our visual
+   cue and adds width pressure. Tapping anywhere on the field still opens
+   the picker. */
+input[type="date"]::-webkit-calendar-picker-indicator,
+input[type="datetime-local"]::-webkit-calendar-picker-indicator,
+input[type="time"]::-webkit-calendar-picker-indicator {
+  opacity: 0.5;
+  cursor: pointer;
+}
+
+/* Prevent iOS from rendering the inner date spinner area at its native
+   minimum width by collapsing the inner fields container. */
+input[type="datetime-local"]::-webkit-date-and-time-value,
+input[type="date"]::-webkit-date-and-time-value {
+  text-align: left;
 }
 
 input::placeholder, textarea::placeholder { color: var(--ink-300); }
