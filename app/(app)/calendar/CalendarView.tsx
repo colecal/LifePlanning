@@ -477,29 +477,32 @@ function WeekView({
   const days = Array.from({ length: 7 }, (_, i) => addDays(rangeStart, i));
   const today = startOfDay(new Date());
 
+  function eventsForDay(day: Date): Occurrence[] {
+    return occurrences.filter(
+      (o) =>
+        isSameDay(day, o.occurrence_start) ||
+        (day >= startOfDay(o.occurrence_start) && day <= o.occurrence_end),
+    );
+  }
+
   return (
-    <div className="card overflow-hidden">
-      <div className="grid grid-cols-7">
+    <>
+      {/* MOBILE: vertical day stack — readable, generous tap targets */}
+      <div className="flex flex-col gap-3 sm:hidden">
         {days.map((day, i) => {
           const isToday = isSameDay(day, today);
-          const dayEvents = occurrences.filter(
-            (o) =>
-              isSameDay(day, o.occurrence_start) ||
-              (day >= startOfDay(o.occurrence_start) && day <= o.occurrence_end),
-          );
-
+          const dayEvents = eventsForDay(day);
           return (
             <div
               key={i}
               onClick={() => onDayClick(day)}
-              className={`group min-h-[18rem] cursor-pointer border-r border-ink-700/6 p-2 last:border-r-0 transition hover:bg-amber-50/40`}
+              className={`card flex flex-col gap-2 p-4 transition active:bg-amber-50/40 ${
+                isToday ? "ring-1 ring-amber-400/40" : ""
+              }`}
             >
-              <div className="mb-2 flex flex-col items-center">
-                <span className="text-[10px] font-semibold uppercase tracking-[0.16em] text-ink-400">
-                  {format(day, "EEE")}
-                </span>
+              <div className="flex items-baseline gap-3">
                 <span
-                  className={`mt-1 inline-flex h-7 w-7 items-center justify-center rounded-full text-sm font-medium ${
+                  className={`grid h-9 w-9 shrink-0 place-items-center rounded-full text-base font-semibold ${
                     isToday
                       ? "bg-amber-gradient text-ink-900 shadow-soft"
                       : "text-ink-700"
@@ -507,41 +510,121 @@ function WeekView({
                 >
                   {format(day, "d")}
                 </span>
+                <div className="flex flex-col">
+                  <span className="text-[10px] font-semibold uppercase tracking-[0.18em] text-amber-700">
+                    {isToday ? "Today" : format(day, "EEEE")}
+                  </span>
+                  <span className="text-xs text-ink-400">
+                    {format(day, "MMM d")}
+                  </span>
+                </div>
+                {dayEvents.length > 0 ? (
+                  <span className="ml-auto text-[11px] text-ink-400">
+                    {dayEvents.length} event{dayEvents.length === 1 ? "" : "s"}
+                  </span>
+                ) : null}
               </div>
-              <ul className="flex flex-col gap-1">
-                {dayEvents.map((e, idx) => {
-                  const owner = e.owner_id ? memberMap.get(e.owner_id) : null;
-                  const color = owner?.color ?? "#9A5B0C";
-                  const isContinuation = !isSameDay(day, e.occurrence_start);
-                  return (
-                    <li
-                      key={`${e.id}-${idx}`}
-                      onClick={(ev) => {
-                        ev.stopPropagation();
-                        onEventClick(e);
-                      }}
-                      className="truncate rounded-md px-1.5 py-1 text-[11px] font-medium text-ink-900 transition hover:brightness-95"
-                      style={{
-                        background: `linear-gradient(135deg, ${color}33, ${color}55)`,
-                        borderLeft: `2px solid ${color}`,
-                      }}
-                      title={e.title}
-                    >
-                      {isContinuation ? (
-                        <span className="opacity-60">↳ </span>
-                      ) : !e.all_day ? (
-                        format(e.occurrence_start, "h:mma ").toLowerCase()
-                      ) : null}
-                      {e.title}
-                    </li>
-                  );
-                })}
-              </ul>
+              {dayEvents.length === 0 ? (
+                <p className="pl-12 text-xs text-ink-300">Nothing scheduled.</p>
+              ) : (
+                <ul className="flex flex-col gap-1.5 pl-12">
+                  {dayEvents.map((e, idx) => {
+                    const owner = e.owner_id ? memberMap.get(e.owner_id) : null;
+                    const color = owner?.color ?? "#9A5B0C";
+                    const isContinuation = !isSameDay(day, e.occurrence_start);
+                    return (
+                      <li
+                        key={`${e.id}-${idx}`}
+                        onClick={(ev) => {
+                          ev.stopPropagation();
+                          onEventClick(e);
+                        }}
+                        className="flex items-start gap-2 rounded-lg border border-ink-700/8 bg-cream-50/60 px-3 py-2 text-sm"
+                        style={{ borderLeftColor: color, borderLeftWidth: 3 }}
+                      >
+                        <div className="min-w-0 flex-1">
+                          <p className="truncate font-medium text-ink-900">
+                            {isContinuation ? <span className="opacity-60">↳ </span> : null}
+                            {e.title}
+                          </p>
+                          <p className="text-xs text-ink-500">
+                            {e.all_day
+                              ? "All day"
+                              : format(e.occurrence_start, "h:mm a").toLowerCase()}
+                            {e.location ? ` · ${e.location}` : ""}
+                          </p>
+                        </div>
+                      </li>
+                    );
+                  })}
+                </ul>
+              )}
             </div>
           );
         })}
       </div>
-    </div>
+
+      {/* DESKTOP: 7-column grid */}
+      <div className="card hidden overflow-hidden sm:block">
+        <div className="grid grid-cols-7">
+          {days.map((day, i) => {
+            const isToday = isSameDay(day, today);
+            const dayEvents = eventsForDay(day);
+            return (
+              <div
+                key={i}
+                onClick={() => onDayClick(day)}
+                className="group min-h-[18rem] cursor-pointer border-r border-ink-700/6 p-2 last:border-r-0 transition hover:bg-amber-50/40"
+              >
+                <div className="mb-2 flex flex-col items-center">
+                  <span className="text-[10px] font-semibold uppercase tracking-[0.16em] text-ink-400">
+                    {format(day, "EEE")}
+                  </span>
+                  <span
+                    className={`mt-1 inline-flex h-7 w-7 items-center justify-center rounded-full text-sm font-medium ${
+                      isToday
+                        ? "bg-amber-gradient text-ink-900 shadow-soft"
+                        : "text-ink-700"
+                    }`}
+                  >
+                    {format(day, "d")}
+                  </span>
+                </div>
+                <ul className="flex flex-col gap-1">
+                  {dayEvents.map((e, idx) => {
+                    const owner = e.owner_id ? memberMap.get(e.owner_id) : null;
+                    const color = owner?.color ?? "#9A5B0C";
+                    const isContinuation = !isSameDay(day, e.occurrence_start);
+                    return (
+                      <li
+                        key={`${e.id}-${idx}`}
+                        onClick={(ev) => {
+                          ev.stopPropagation();
+                          onEventClick(e);
+                        }}
+                        className="truncate rounded-md px-1.5 py-1 text-[11px] font-medium text-ink-900 transition hover:brightness-95"
+                        style={{
+                          background: `linear-gradient(135deg, ${color}33, ${color}55)`,
+                          borderLeft: `2px solid ${color}`,
+                        }}
+                        title={e.title}
+                      >
+                        {isContinuation ? (
+                          <span className="opacity-60">↳ </span>
+                        ) : !e.all_day ? (
+                          format(e.occurrence_start, "h:mma ").toLowerCase()
+                        ) : null}
+                        {e.title}
+                      </li>
+                    );
+                  })}
+                </ul>
+              </div>
+            );
+          })}
+        </div>
+      </div>
+    </>
   );
 }
 

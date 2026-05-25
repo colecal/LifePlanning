@@ -198,19 +198,20 @@ export function TasksView({
         </h1>
       </header>
 
-      <form onSubmit={addTask} className="card flex flex-col gap-2 p-2.5">
+      <form onSubmit={addTask} className="card flex flex-col gap-2 p-3">
         <input
           value={title}
           onChange={(e) => setTitle(e.target.value)}
           placeholder="New task…"
-          className="w-full min-w-0 bg-transparent px-3 py-2.5 text-base text-ink-900 placeholder:text-ink-300 focus:outline-none sm:text-sm"
+          className="input-field"
         />
         <input
           type="datetime-local"
           value={due}
           onChange={(e) => setDue(e.target.value)}
           aria-label="Due date"
-          className="input-field w-full"
+          className="input-field"
+          style={{ minWidth: 0, maxWidth: "100%" }}
         />
         <div className="flex gap-2">
           <select

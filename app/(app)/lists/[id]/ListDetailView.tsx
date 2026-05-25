@@ -226,12 +226,12 @@ export function ListDetailView({
         </button>
       </div>
 
-      <form onSubmit={addItem} className="card flex flex-col gap-2 p-2.5">
+      <form onSubmit={addItem} className="card flex flex-col gap-2 p-3">
         <input
           value={newContent}
           onChange={(e) => setNewContent(e.target.value)}
           placeholder={list.kind === "grocery" ? "Add an item…" : "Add to list…"}
-          className="w-full min-w-0 bg-transparent px-3 py-2.5 text-base text-ink-900 placeholder:text-ink-300 focus:outline-none sm:text-sm"
+          className="input-field"
         />
         <div className="flex gap-2">
           {list.kind === "grocery" ? (
