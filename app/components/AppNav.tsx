@@ -74,6 +74,16 @@ const SECONDARY: Item[] = [
     ),
   },
   {
+    href: "/money",
+    label: "Money",
+    icon: (
+      <svg viewBox="0 0 24 24" className={ICON_CLASS} fill="none" stroke="currentColor" strokeWidth="1.6" strokeLinecap="round" strokeLinejoin="round">
+        <circle cx="12" cy="12" r="9" />
+        <path d="M12 7v10M9.5 9.5h4a1.5 1.5 0 0 1 0 3h-3a1.5 1.5 0 0 0 0 3h4" />
+      </svg>
+    ),
+  },
+  {
     href: "/pets",
     label: "Pets",
     icon: (

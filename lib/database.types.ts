@@ -129,6 +129,45 @@ export type Database = {
           },
         ]
       }
+      fun_money_ledger: {
+        Row: {
+          amount_cents: number
+          category: string
+          created_at: string
+          created_by: string | null
+          description: string | null
+          household_id: string
+          id: string
+          kind: string
+          occurred_at: string
+          profile_id: string
+        }
+        Insert: {
+          amount_cents: number
+          category: string
+          created_at?: string
+          created_by?: string | null
+          description?: string | null
+          household_id: string
+          id?: string
+          kind: string
+          occurred_at?: string
+          profile_id: string
+        }
+        Update: {
+          amount_cents?: number
+          category?: string
+          created_at?: string
+          created_by?: string | null
+          description?: string | null
+          household_id?: string
+          id?: string
+          kind?: string
+          occurred_at?: string
+          profile_id?: string
+        }
+        Relationships: []
+      }
       feed_tokens: {
         Row: {
           created_at: string
@@ -521,6 +560,36 @@ export type Database = {
         }
         Relationships: []
       }
+      fun_money_monthly_budget: {
+        Row: {
+          amount_cents: number
+          created_at: string
+          created_by: string | null
+          household_id: string
+          profile_id: string
+          updated_at: string
+          year_month: string
+        }
+        Insert: {
+          amount_cents: number
+          created_at?: string
+          created_by?: string | null
+          household_id: string
+          profile_id: string
+          updated_at?: string
+          year_month: string
+        }
+        Update: {
+          amount_cents?: number
+          created_at?: string
+          created_by?: string | null
+          household_id?: string
+          profile_id?: string
+          updated_at?: string
+          year_month?: string
+        }
+        Relationships: []
+      }
       profiles: {
         Row: {
           avatar_url: string | null
@@ -528,6 +597,8 @@ export type Database = {
           created_at: string
           display_name: string
           email_digest_enabled: boolean
+          fun_money_default_cents: number
+          fun_money_start_month: string | null
           id: string
           theme_preference: string
         }
@@ -537,6 +608,8 @@ export type Database = {
           created_at?: string
           display_name: string
           email_digest_enabled?: boolean
+          fun_money_default_cents?: number
+          fun_money_start_month?: string | null
           id: string
           theme_preference?: string
         }
@@ -546,6 +619,8 @@ export type Database = {
           created_at?: string
           display_name?: string
           email_digest_enabled?: boolean
+          fun_money_default_cents?: number
+          fun_money_start_month?: string | null
           id?: string
           theme_preference?: string
         }
