@@ -695,6 +695,14 @@ export type Database = {
       [_ in never]: never
     }
     Functions: {
+      fun_money_set_default: {
+        Args: {
+          p_profile_id: string
+          p_amount_cents: number
+          p_default_start_month: string
+        }
+        Returns: undefined
+      }
       is_email_allowed: { Args: { email: string }; Returns: boolean }
       is_household_member: { Args: { hid: string }; Returns: boolean }
     }

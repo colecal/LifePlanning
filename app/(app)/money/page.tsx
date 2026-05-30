@@ -6,7 +6,6 @@ export default async function MoneyPage() {
   const supabase = await createClient();
   const { userId, householdId } = await getCurrentUserAndHousehold();
   const members = await getHouseholdMembers();
-  const memberIds = members.map((m) => m.id);
 
   const [entriesR, budgetsR, overridesR] = await Promise.all([
     supabase
@@ -15,12 +14,10 @@ export default async function MoneyPage() {
       .eq("household_id", householdId)
       .order("occurred_at", { ascending: false })
       .limit(500),
-    memberIds.length
-      ? supabase
-          .from("profiles")
-          .select("id, fun_money_default_cents, fun_money_start_month")
-          .in("id", memberIds)
-      : Promise.resolve({ data: [] }),
+    supabase
+      .from("profiles")
+      .select("id, fun_money_default_cents, fun_money_start_month")
+      .in("id", members.map((m) => m.id)),
     supabase
       .from("fun_money_monthly_budget")
       .select("profile_id, year_month, amount_cents")

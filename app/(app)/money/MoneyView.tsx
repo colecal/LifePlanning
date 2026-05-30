@@ -1,12 +1,18 @@
 "use client";
 
 import { useEffect, useMemo, useState, useTransition } from "react";
-import { format, formatDistanceToNow } from "date-fns";
+import { formatDistanceToNow } from "date-fns";
 import { createClient } from "@/lib/supabase/client";
 import type { Profile } from "@/lib/data";
 import { useConfirm } from "@/app/components/ConfirmDialog";
 import { useToast } from "@/app/components/Toast";
 import { SwipeableRow } from "@/app/components/SwipeableRow";
+import {
+  centsToDollars,
+  monthLabel,
+  monthsBetweenInclusive,
+  yearMonth,
+} from "@/lib/money";
 import {
   addLedgerEntryAction,
   clearMonthOverrideAction,
@@ -103,37 +109,6 @@ function emojiFor(name: string, category: string): string {
   return hit?.emoji ?? "✨";
 }
 
-function centsToDollars(c: number): string {
-  return (c / 100).toLocaleString("en-US", {
-    style: "currency",
-    currency: "USD",
-  });
-}
-
-function yearMonth(d: Date): string {
-  return `${d.getFullYear()}-${String(d.getMonth() + 1).padStart(2, "0")}`;
-}
-
-function monthsBetweenInclusive(startYM: string, endYM: string): string[] {
-  const [sy, sm] = startYM.split("-").map(Number);
-  const [ey, em] = endYM.split("-").map(Number);
-  if (!sy || !sm || !ey || !em) return [];
-  const result: string[] = [];
-  let y = sy;
-  let m = sm;
-  while (y < ey || (y === ey && m <= em)) {
-    result.push(`${y}-${String(m).padStart(2, "0")}`);
-    m++;
-    if (m > 12) { m = 1; y++; }
-  }
-  return result;
-}
-
-function monthLabel(ym: string): string {
-  const [y, m] = ym.split("-").map(Number);
-  return format(new Date(y, m - 1, 1), "MMMM yyyy");
-}
-
 export function MoneyView({
   members,
   initialEntries,
@@ -225,26 +200,29 @@ export function MoneyView({
   }, []);
 
   const active = members.find((m) => m.id === activeId) ?? members[0];
-  if (!active) return null;
 
-  const activeBudget =
-    budgets.find((b) => b.profile_id === active.id) ?? {
-      profile_id: active.id,
-      default_cents: 0,
-      start_month: null,
-    };
+  // Stable identity so downstream effects in BudgetModal don't re-run every render
+  const activeBudget = useMemo<ProfileBudget>(
+    () =>
+      budgets.find((b) => b.profile_id === active?.id) ?? {
+        profile_id: active?.id ?? "",
+        default_cents: 0,
+        start_month: null,
+      },
+    [budgets, active?.id],
+  );
 
   const monthOverrideMap = useMemo(() => {
     const m = new Map<string, number>();
     for (const o of overrides) {
-      if (o.profile_id === active.id) m.set(o.year_month, o.amount_cents);
+      if (o.profile_id === active?.id) m.set(o.year_month, o.amount_cents);
     }
     return m;
-  }, [overrides, active.id]);
+  }, [overrides, active?.id]);
 
   const ownEntries = useMemo(
-    () => entries.filter((e) => e.profile_id === active.id),
-    [entries, active.id],
+    () => entries.filter((e) => e.profile_id === active?.id),
+    [entries, active?.id],
   );
 
   // Rolling balance and per-month breakdown
@@ -262,18 +240,19 @@ export function MoneyView({
       runningBalance: number;
       hasOverride: boolean;
     };
-    const rows: MonthRow[] = months.map((ym) => ({
-      ym,
-      label: monthLabel(ym),
-      allowance: monthOverrideMap.has(ym)
-        ? monthOverrideMap.get(ym)!
-        : activeBudget.default_cents,
-      income: 0,
-      expense: 0,
-      net: 0,
-      runningBalance: 0,
-      hasOverride: monthOverrideMap.has(ym),
-    }));
+    const rows: MonthRow[] = months.map((ym) => {
+      const override = monthOverrideMap.get(ym);
+      return {
+        ym,
+        label: monthLabel(ym),
+        allowance: override ?? activeBudget.default_cents,
+        income: 0,
+        expense: 0,
+        net: 0,
+        runningBalance: 0,
+        hasOverride: override !== undefined,
+      };
+    });
     const rowByYM = new Map(rows.map((r) => [r.ym, r]));
 
     for (const e of ownEntries) {
@@ -294,10 +273,13 @@ export function MoneyView({
     const thisMonth = rows[rows.length - 1] ?? null;
     return {
       rows,
+      reversedRows: rows.slice().reverse(),
       balance: running,
       thisMonth,
     };
   }, [ownEntries, activeBudget, monthOverrideMap]);
+
+  if (!active) return null;
 
   async function removeEntry(entry: Entry) {
     const ok = await confirm({
@@ -383,7 +365,7 @@ export function MoneyView({
             Monthly history
           </h2>
           <div className="card flex flex-col divide-y divide-ink-700/6 overflow-hidden">
-            {[...calc.rows].reverse().map((r) => (
+            {calc.reversedRows.map((r) => (
               <MonthHistoryRow
                 key={r.ym}
                 row={r}
@@ -573,6 +555,12 @@ function BalanceCard({
   );
 }
 
+const PILL_TONE: Record<"income" | "expense" | "neutral", string> = {
+  income:  "border-emerald-300/40 bg-emerald-50/60 text-emerald-700",
+  expense: "border-red-300/40 bg-red-50/60 text-red-700",
+  neutral: "border-ink-700/10 bg-cream-50/60 text-ink-700",
+};
+
 function Pill({
   label,
   value,
@@ -580,16 +568,10 @@ function Pill({
 }: {
   label: string;
   value: string;
-  tone: "income" | "expense" | "neutral";
+  tone: keyof typeof PILL_TONE;
 }) {
-  const styles =
-    tone === "income"
-      ? "border-emerald-300/40 bg-emerald-50/60 text-emerald-700"
-      : tone === "expense"
-        ? "border-red-300/40 bg-red-50/60 text-red-700"
-        : "border-ink-700/10 bg-cream-50/60 text-ink-700";
   return (
-    <div className={`rounded-xl border px-3 py-2 ${styles}`}>
+    <div className={`rounded-xl border px-3 py-2 ${PILL_TONE[tone]}`}>
       <p className="text-[9px] font-semibold uppercase tracking-wider opacity-70">
         {label}
       </p>
@@ -619,9 +601,14 @@ function QuickAdd({
   const sets = presetsFor(active.display_name);
   const presets = kind === "income" ? sets.income : sets.expense;
 
-  useEffect(() => {
-    if (category && !presets.find((p) => p.label === category)) setCategory("");
-  }, [kind]); // eslint-disable-line react-hooks/exhaustive-deps
+  function setKindAndResetCategory(next: "income" | "expense") {
+    if (next === kind) return;
+    setKind(next);
+    // The preset list differs between income/expense; clear if current pick isn't valid
+    if (category && !(next === "income" ? sets.income : sets.expense).find((p) => p.label === category)) {
+      setCategory("");
+    }
+  }
 
   function submit(e: React.FormEvent) {
     e.preventDefault();
@@ -669,7 +656,7 @@ function QuickAdd({
       <div className="flex rounded-full bg-cream-100/60 p-1 text-sm">
         <button
           type="button"
-          onClick={() => setKind("expense")}
+          onClick={() => setKindAndResetCategory("expense")}
           className={`flex-1 rounded-full py-1.5 font-medium transition ${
             kind === "expense" ? "bg-red-500/90 text-white shadow-soft" : "text-ink-500"
           }`}
@@ -678,7 +665,7 @@ function QuickAdd({
         </button>
         <button
           type="button"
-          onClick={() => setKind("income")}
+          onClick={() => setKindAndResetCategory("income")}
           className={`flex-1 rounded-full py-1.5 font-medium transition ${
             kind === "income" ? "bg-emerald-500/90 text-white shadow-soft" : "text-ink-500"
           }`}

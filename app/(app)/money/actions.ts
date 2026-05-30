@@ -2,6 +2,7 @@
 
 import { createClient } from "@/lib/supabase/server";
 import { getCurrentUserAndHousehold } from "@/lib/data";
+import { yearMonth } from "@/lib/money";
 
 export async function addLedgerEntryAction(input: {
   profile_id: string;
@@ -37,29 +38,18 @@ export async function deleteLedgerEntryAction(id: string) {
 
 // Sets the recurring monthly allowance and (if not yet set) anchors the
 // start month to today, so balance starts accruing from now.
+// Uses a Postgres RPC so the COALESCE happens atomically without a round-trip.
 export async function setMonthlyDefaultAction(input: {
   profile_id: string;
   amount_cents: number;
 }) {
   if (input.amount_cents < 0) throw new Error("Amount must be ≥ 0");
   const supabase = await createClient();
-  const { data: profile } = await supabase
-    .from("profiles")
-    .select("fun_money_start_month")
-    .eq("id", input.profile_id)
-    .single();
-
-  const patch: { fun_money_default_cents: number; fun_money_start_month?: string } = {
-    fun_money_default_cents: Math.round(input.amount_cents),
-  };
-  if (!profile?.fun_money_start_month) {
-    patch.fun_money_start_month = currentYearMonth();
-  }
-
-  const { error } = await supabase
-    .from("profiles")
-    .update(patch)
-    .eq("id", input.profile_id);
+  const { error } = await supabase.rpc("fun_money_set_default", {
+    p_profile_id: input.profile_id,
+    p_amount_cents: Math.round(input.amount_cents),
+    p_default_start_month: yearMonth(new Date()),
+  });
   if (error) throw new Error(error.message);
 }
 
@@ -100,7 +90,3 @@ export async function clearMonthOverrideAction(input: {
   if (error) throw new Error(error.message);
 }
 
-function currentYearMonth(): string {
-  const d = new Date();
-  return `${d.getFullYear()}-${String(d.getMonth() + 1).padStart(2, "0")}`;
-}
