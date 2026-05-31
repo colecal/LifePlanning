@@ -355,6 +355,9 @@ export function MoneyView({
         active={active}
         currentUserId={currentUserId}
         onAdded={(temp) => setEntries((prev) => [temp, ...prev])}
+        onSettled={(tempId) =>
+          setEntries((prev) => prev.filter((p) => p.id !== tempId))
+        }
         onError={(msg) => toast.error(msg)}
       />
 
@@ -586,11 +589,13 @@ function QuickAdd({
   active,
   currentUserId,
   onAdded,
+  onSettled,
   onError,
 }: {
   active: Profile;
   currentUserId: string;
   onAdded: (entry: Entry) => void;
+  onSettled: (tempId: string) => void;
   onError: (msg: string) => void;
 }) {
   const [kind, setKind] = useState<"income" | "expense">("expense");
@@ -647,6 +652,11 @@ function QuickAdd({
         });
       } catch (err) {
         onError(err instanceof Error ? err.message : String(err));
+      } finally {
+        // Realtime delivers the real row separately. Drop the temp so the
+        // list doesn't show both. On error the temp goes away too, matching
+        // the rollback behavior in the lists/tasks views.
+        onSettled(tempId);
       }
     });
   }
