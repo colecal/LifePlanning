@@ -5,6 +5,7 @@ import "./globals.css";
 import { ThemeProvider } from "./components/ThemeProvider";
 import { ToastProvider } from "./components/Toast";
 import { ConfirmDialogProvider } from "./components/ConfirmDialog";
+import { ServiceWorkerRegister } from "./components/ServiceWorkerRegister";
 import {
   THEME_COOKIE,
   isValidTheme,
@@ -83,6 +84,7 @@ export default async function RootLayout({
         <script dangerouslySetInnerHTML={{ __html: themeInitScript }} />
       </head>
       <body className="min-h-full flex flex-col text-ink-700">
+        <ServiceWorkerRegister />
         <ThemeProvider initialPreference={initial}>
           <ConfirmDialogProvider>
             <ToastProvider>{children}</ToastProvider>

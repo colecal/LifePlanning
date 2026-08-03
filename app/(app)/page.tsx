@@ -12,70 +12,65 @@ export default async function HomePage() {
   const endOfDay = new Date();
   endOfDay.setHours(23, 59, 59, 999);
 
-  // Fire independent queries in parallel
-  const [membersR, nextEventsR, todayTasksR, groceryListR, petsR, activity] = await Promise.all([
-    getHouseholdMembers(),
-    supabase
-      .from("events")
-      .select("id, title, starts_at, ends_at, all_day, location, owner_id")
-      .eq("household_id", householdId)
-      .gte("starts_at", startOfDay(now).toISOString())
-      .order("starts_at", { ascending: true })
-      .limit(3),
-    supabase
-      .from("tasks")
-      .select("id, title, due_at, assignee_id, status")
-      .eq("household_id", householdId)
-      .eq("status", "open")
-      .lte("due_at", endOfDay.toISOString())
-      .order("due_at", { ascending: true }),
-    supabase
-      .from("lists")
-      .select("id, name")
-      .eq("household_id", householdId)
-      .eq("kind", "grocery")
-      .order("created_at", { ascending: false })
-      .limit(1)
-      .maybeSingle(),
-    supabase
-      .from("pets")
-      .select("id, name, color")
-      .eq("household_id", householdId)
-      .order("created_at", { ascending: true }),
-    getRecentActivity(householdId, 8),
-  ]);
+  // Fire every query in parallel — including the ones that used to run
+  // sequentially after this batch (grocery items depended on the grocery
+  // list's id, pet feedings depended on pet ids). Grocery items are now
+  // embedded in the same list query; pet feedings are scoped by
+  // household_id directly instead of by pet id, so neither has to wait.
+  const [membersR, nextEventsR, todayTasksR, groceryListR, petsR, petFeedingsR, activity] =
+    await Promise.all([
+      getHouseholdMembers(),
+      supabase
+        .from("events")
+        .select("id, title, starts_at, ends_at, all_day, location, owner_id")
+        .eq("household_id", householdId)
+        .gte("starts_at", startOfDay(now).toISOString())
+        .order("starts_at", { ascending: true })
+        .limit(3),
+      supabase
+        .from("tasks")
+        .select("id, title, due_at, assignee_id, status")
+        .eq("household_id", householdId)
+        .eq("status", "open")
+        .lte("due_at", endOfDay.toISOString())
+        .order("due_at", { ascending: true }),
+      supabase
+        .from("lists")
+        .select("id, name, list_items(id, content, category, checked, assignee_id)")
+        .eq("household_id", householdId)
+        .eq("kind", "grocery")
+        .eq("list_items.checked", false)
+        .order("created_at", { ascending: false })
+        .order("created_at", { referencedTable: "list_items", ascending: true })
+        .limit(1)
+        .limit(5, { referencedTable: "list_items" })
+        .maybeSingle(),
+      supabase
+        .from("pets")
+        .select("id, name, color")
+        .eq("household_id", householdId)
+        .order("created_at", { ascending: true }),
+      supabase
+        .from("pet_logs")
+        .select("pet_id, at")
+        .eq("household_id", householdId)
+        .eq("kind", "feeding")
+        .order("at", { ascending: false }),
+      getRecentActivity(householdId, 8),
+    ]);
 
   const members = membersR;
   const memberMap = new Map(members.map((m) => [m.id, m]));
   const nextEvents = nextEventsR.data;
   const todayTasks = todayTasksR.data;
   const groceryList = groceryListR.data;
+  const groceryItems = groceryListR.data?.list_items;
   const pets = petsR.data;
 
-  // Last feeding per pet
-  const petIds = (pets ?? []).map((p) => p.id);
-  const { data: petLastFeed } = petIds.length
-    ? await supabase
-        .from("pet_logs")
-        .select("pet_id, at")
-        .in("pet_id", petIds)
-        .eq("kind", "feeding")
-        .order("at", { ascending: false })
-    : { data: null };
   const lastFedByPet = new Map<string, string>();
-  for (const log of petLastFeed ?? []) {
+  for (const log of petFeedingsR.data ?? []) {
     if (!lastFedByPet.has(log.pet_id)) lastFedByPet.set(log.pet_id, log.at);
   }
-
-  const { data: groceryItems } = groceryList
-    ? await supabase
-        .from("list_items")
-        .select("id, content, category, checked, assignee_id")
-        .eq("list_id", groceryList.id)
-        .eq("checked", false)
-        .order("created_at", { ascending: true })
-        .limit(5)
-    : { data: null };
 
   return (
     <div className="flex flex-col gap-8">
