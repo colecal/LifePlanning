@@ -7,22 +7,22 @@ export default async function PetsPage() {
   const supabase = await createClient();
   const { householdId } = await getCurrentUserAndHousehold();
 
-  const { data: pets } = await supabase
-    .from("pets")
-    .select("id, name, color, breed, birthday")
-    .eq("household_id", householdId)
-    .order("created_at", { ascending: true });
-
-  // Find each pet's last feeding + last weight
-  const petIds = (pets ?? []).map((p) => p.id);
-  const { data: recentLogs } = petIds.length
-    ? await supabase
-        .from("pet_logs")
-        .select("pet_id, kind, value, at")
-        .in("pet_id", petIds)
-        .in("kind", ["feeding", "weight", "medication", "walk"])
-        .order("at", { ascending: false })
-    : { data: null };
+  // Both queries are scoped by household_id directly (pet_logs carries its
+  // own household_id column), so they can run in parallel instead of the
+  // logs query waiting on pet ids from the first one.
+  const [{ data: pets }, { data: recentLogs }] = await Promise.all([
+    supabase
+      .from("pets")
+      .select("id, name, color, breed, birthday")
+      .eq("household_id", householdId)
+      .order("created_at", { ascending: true }),
+    supabase
+      .from("pet_logs")
+      .select("pet_id, kind, value, at")
+      .eq("household_id", householdId)
+      .in("kind", ["feeding", "weight", "medication", "walk"])
+      .order("at", { ascending: false }),
+  ]);
 
   const lastByKind = new Map<string, Record<string, { value: string | null; at: string }>>();
   for (const log of recentLogs ?? []) {
